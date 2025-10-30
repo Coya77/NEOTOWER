@@ -1,0 +1,268 @@
+<!-- templates/administrador/gestion_anuncios.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+:root {
+  --primary-blue: #2563eb;
+  --mint-green: #10b981;
+  --dark-black: #1f2937;
+  --light-mint: #d1fae5;
+  --gradient-bg: linear-gradient(135deg, var(--primary-blue) 0%, var(--mint-green) 100%);
+}
+
+body {
+  background: linear-gradient(135deg, #e5f5ff 0%, #f9fffa 100%);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+h2 {
+  color: var(--dark-black);
+  font-weight: 700;
+  text-shadow: 0 2px 3px rgba(0,0,0,0.05);
+}
+
+.card {
+  border: none;
+  border-radius: 18px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+}
+.card:hover {
+  transform: translateY(-3px);
+}
+
+.btn-primary {
+  background: var(--gradient-bg);
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  color: white;
+  transition: all 0.3s ease;
+}
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 15px rgba(37, 99, 235, 0.4);
+}
+
+.btn-outline-primary {
+  border: 2px solid var(--mint-green);
+  color: var(--mint-green);
+  font-weight: 600;
+  border-radius: 10px;
+}
+.btn-outline-primary:hover {
+  background: var(--mint-green);
+  color: white;
+}
+
+.table {
+  border-radius: 12px;
+  overflow: hidden;
+}
+.table thead {
+  background: var(--gradient-bg);
+  color: white;
+}
+.table tbody tr:hover {
+  background-color: #f1f5f9;
+}
+
+.filter-active {
+  background: var(--gradient-bg) !important;
+  color: white !important;
+  border: none !important;
+}
+
+.badge {
+  border-radius: 8px;
+  font-size: 0.85rem;
+  padding: 0.45em 0.6em;
+}
+
+.bg-gradient-blue { background: var(--gradient-bg); color: white; }
+.bg-mint { background: var(--mint-green); color: white; }
+.bg-light-mint { background: var(--light-mint); color: var(--dark-black); }
+
+.shadow-soft {
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  border-radius: 15px;
+}
+
+.stats-card {
+  text-align: center;
+  padding: 20px;
+  border-radius: 15px;
+  background: rgba(255,255,255,0.9);
+  backdrop-filter: blur(5px);
+}
+.stats-card h5 {
+  color: var(--dark-black);
+  font-weight: 600;
+}
+.stats-card p {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--primary-blue);
+}
+</style>
+
+<!-- HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2><i class="bi bi-megaphone-fill me-2 text-primary"></i>Gestión de Anuncios</h2>
+  <div>
+    <a href="{{ url_for('anuncios.muro_anuncios') }}" class="btn btn-outline-primary me-2">
+      <i class="bi bi-eye"></i> Ver Muro
+    </a>
+    <a href="{{ url_for('anuncios.nuevo_anuncio') }}" class="btn btn-primary">
+      <i class="bi bi-plus-circle"></i> Nuevo Anuncio
+    </a>
+  </div>
+</div>
+
+<!-- FILTROS -->
+<div class="card mb-4 shadow-soft">
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <h6 class="mb-2 text-muted"><i class="bi bi-funnel"></i> Filtrar por tipo:</h6>
+        <div class="btn-group btn-group-sm flex-wrap">
+          <a href="{{ url_for('anuncios.gestion_anuncios', tipo='todos', estado=filtro_estado_actual) }}" 
+             class="btn btn-outline-primary {{ 'filter-active' if filtro_tipo_actual == 'todos' }}">Todos</a>
+          <a href="{{ url_for('anuncios.gestion_anuncios', tipo='general', estado=filtro_estado_actual) }}" 
+             class="btn btn-outline-primary {{ 'filter-active' if filtro_tipo_actual == 'general' }}">General</a>
+          <a href="{{ url_for('anuncios.gestion_anuncios', tipo='importante', estado=filtro_estado_actual) }}" 
+             class="btn btn-outline-primary {{ 'filter-active' if filtro_tipo_actual == 'importante' }}">Importante</a>
+          <a href="{{ url_for('anuncios.gestion_anuncios', tipo='mantenimiento', estado=filtro_estado_actual) }}" 
+             class="btn btn-outline-primary {{ 'filter-active' if filtro_tipo_actual == 'mantenimiento' }}">Mantenimiento</a>
+          <a href="{{ url_for('anuncios.gestion_anuncios', tipo='evento', estado=filtro_estado_actual) }}" 
+             class="btn btn-outline-primary {{ 'filter-active' if filtro_tipo_actual == 'evento' }}">Evento</a>
+        </div>
+      </div>
+
+      <div class="col-md-6 mb-3">
+        <h6 class="mb-2 text-muted"><i class="bi bi-funnel"></i> Filtrar por estado:</h6>
+        <div class="btn-group btn-group-sm flex-wrap">
+          <a href="{{ url_for('anuncios.gestion_anuncios', tipo=filtro_tipo_actual, estado='todos') }}" 
+             class="btn btn-outline-primary {{ 'filter-active' if filtro_estado_actual == 'todos' }}">Todos</a>
+          <a href="{{ url_for('anuncios.gestion_anuncios', tipo=filtro_tipo_actual, estado='activo') }}" 
+             class="btn btn-outline-primary {{ 'filter-active' if filtro_estado_actual == 'activo' }}">Activos</a>
+          <a href="{{ url_for('anuncios.gestion_anuncios', tipo=filtro_tipo_actual, estado='inactivo') }}" 
+             class="btn btn-outline-primary {{ 'filter-active' if filtro_estado_actual == 'inactivo' }}">Inactivos</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ESTADÍSTICAS -->
+<div class="row mb-4">
+  <div class="col-md-3 mb-3">
+    <div class="stats-card shadow-soft">
+      <i class="bi bi-megaphone text-primary fs-2"></i>
+      <h5>Total</h5>
+      <p>{{ anuncios|length }}</p>
+    </div>
+  </div>
+  <div class="col-md-3 mb-3">
+    <div class="stats-card shadow-soft">
+      <i class="bi bi-check-circle text-success fs-2"></i>
+      <h5>Activos</h5>
+      <p>{{ anuncios|selectattr('estado', 'equalto', 'activo')|list|length }}</p>
+    </div>
+  </div>
+  <div class="col-md-3 mb-3">
+    <div class="stats-card shadow-soft">
+      <i class="bi bi-exclamation-triangle text-warning fs-2"></i>
+      <h5>Importantes</h5>
+      <p>{{ anuncios|selectattr('tipo', 'equalto', 'importante')|list|length }}</p>
+    </div>
+  </div>
+  <div class="col-md-3 mb-3">
+    <div class="stats-card shadow-soft">
+      <i class="bi bi-tools text-info fs-2"></i>
+      <h5>Mantenimiento</h5>
+      <p>{{ anuncios|selectattr('tipo', 'equalto', 'mantenimiento')|list|length }}</p>
+    </div>
+  </div>
+</div>
+
+<!-- TABLA -->
+<div class="card shadow-soft">
+  <div class="card-body">
+    {% if anuncios %}
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
+          <tr>
+            <th>Título</th>
+            <th>Tipo</th>
+            <th>Estado</th>
+            <th>Publicación</th>
+            <th>Expiración</th>
+            <th>Autor</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for anuncio in anuncios %}
+          <tr>
+            <td>
+              <strong>{{ anuncio.titulo }}</strong>
+              {% if anuncio.fecha_expiracion and anuncio.fecha_expiracion < hoy %}
+                <span class="badge bg-secondary ms-1">Expirado</span>
+              {% endif %}
+            </td>
+            <td>
+              <span class="badge 
+                {% if anuncio.tipo == 'importante' %}bg-danger
+                {% elif anuncio.tipo == 'mantenimiento' %}bg-warning
+                {% elif anuncio.tipo == 'evento' %}bg-info
+                {% else %}bg-primary{% endif %}">
+                {{ anuncio.tipo|title }}
+              </span>
+            </td>
+            <td>
+              <span class="badge {% if anuncio.estado == 'activo' %}bg-success{% else %}bg-secondary{% endif %}">
+                {{ anuncio.estado|title }}
+              </span>
+            </td>
+            <td>{{ anuncio.fecha_publicacion.strftime('%d/%m/%Y %H:%M') }}</td>
+            <td>
+              {% if anuncio.fecha_expiracion %}
+                {{ anuncio.fecha_expiracion.strftime('%d/%m/%Y') }}
+              {% else %}
+                <span class="text-muted">No expira</span>
+              {% endif %}
+            </td>
+            <td>{{ anuncio.autor }}</td>
+            <td>
+              <div class="btn-group btn-group-sm">
+                <a href="{{ url_for('anuncios.editar_anuncio', id_anuncio=anuncio.id_anuncio) }}" class="btn btn-outline-primary" title="Editar">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                <a href="{{ url_for('anuncios.eliminar_anuncio', id_anuncio=anuncio.id_anuncio) }}" 
+                   class="btn btn-outline-danger" title="Eliminar"
+                   onclick="return confirm('¿Estás seguro de eliminar este anuncio?')">
+                  <i class="bi bi-trash"></i>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+      <i class="bi bi-megaphone display-1 text-muted"></i>
+      <h4 class="text-muted mt-3">No hay anuncios disponibles</h4>
+      <p class="text-muted mb-4">Comienza creando el primer anuncio para el edificio.</p>
+      <a href="{{ url_for('anuncios.nuevo_anuncio') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-2"></i>Crear primer anuncio
+      </a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

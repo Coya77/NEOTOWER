@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}Gestión de Departamentos{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+  <!-- 🔹 Encabezado -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="text-primary mb-0">
+      <i class="bi bi-building"></i> Gestión de Departamentos
+    </h3>
+
+    <!-- Botón para abrir el modal -->
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNuevoDepartamento">
+      <i class="bi bi-plus-circle"></i> Nuevo Departamento
+    </button>
+  </div>
+
+  <!-- 🔹 Tabla de Departamentos -->
+  <div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+      <i class="bi bi-house-door"></i> Lista de Departamentos
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead class="table-light text-center">
+            <tr>
+              <th>ID</th>
+              <th>Piso</th>
+              <th>Número</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if departamentos %}
+              {% for d in departamentos %}
+              <tr class="text-center">
+                <td>{{ d.id_depto }}</td>
+                <td>{{ d.piso }}</td>
+                <td>{{ d.numero }}</td>
+                <td>
+                {% if d.estado == 'ocupado' %}
+                    <span class="badge bg-danger">Ocupado</span>
+                {% elif d.estado == 'disponible' %}
+                    <span class="badge bg-success">Disponible</span>
+                {% else %}
+                    <span class="badge bg-warning text-dark">{{ d.estado|capitalize }}</span>
+                {% endif %}
+                </td>
+                <td>
+                <div class="btn-group btn-group-sm">
+                    <a href="{{ url_for('editar_departamento', id_depto=d.id_depto) }}" 
+                    class="btn btn-outline-primary" title="Editar">
+                    <i class="bi bi-pencil"></i>
+                    </a>
+                    <a href="{{ url_for('eliminar_departamento', id_depto=d.id_depto) }}" 
+                    class="btn btn-outline-danger"
+                    onclick="return confirm('¿Seguro que deseas eliminar este departamento?');"
+                    title="Eliminar">
+                    <i class="bi bi-trash"></i>
+                    </a>
+                </div>
+                </td>
+
+              </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="5" class="text-center text-muted py-4">
+                  <i class="bi bi-house-x display-6"></i>
+                  <p class="mt-2 mb-0">No hay departamentos registrados.</p>
+                </td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 🔹 Modal Nuevo Departamento -->
+<div class="modal fade" id="modalNuevoDepartamento" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content shadow">
+      <form method="POST" action="{{ url_for('crear_departamento') }}">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title"><i class="bi bi-plus-circle"></i> Nuevo Departamento</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Piso</label>
+            <input type="number" name="piso" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Número</label>
+            <input type="text" name="numero" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Estado</label>
+            <select name="estado" class="form-select">
+              <option value="disponible">Disponible</option>
+              <option value="ocupado">Ocupado</option>
+              <option value="en mantenimiento">En mantenimiento</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-circle"></i> Cancelar
+          </button>
+          <button type="submit" class="btn btn-success">
+            <i class="bi bi-check-circle"></i> Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

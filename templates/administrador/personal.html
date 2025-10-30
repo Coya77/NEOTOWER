@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% block title %}Gestión de Personal{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-people-fill"></i> Gestión de Personal</h2>
+    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalNuevo">
+      <i class="bi bi-plus-circle"></i> Nuevo Personal
+    </button>
+  </div>
+
+  <!-- Tabla de Personal -->
+  <div class="card">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle">
+          <thead class="table-dark text-center">
+            <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>Cargo</th>
+              <th>Salario (Bs.)</th>
+              <th>Último Pago</th>
+              <th>Comprobante</th>
+              <th>Acciones</th>
+
+            </tr>
+          </thead>
+          <tbody class="text-center">
+            {% for p in personal %}
+            <tr>
+              <td>{{ p.id_personal }}</td>
+              <td>{{ p.nombre }}</td>
+              <td>{{ p.cargo }}</td>
+              <td>{{ "%.2f"|format(p.salario) }}</td>
+              <td>{{ p.ultimo_pago }}</td>
+              <td>
+                {% if p.ultimo_pago != "Sin pagos" %}
+                  <a href="{{ url_for('static', filename='comprobantes_personal/recibo_' ~ p.id_personal ~ '_' ~ p.ultimo_pago|replace('/','-') ~ '.pdf') }}"
+                    target="_blank" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-file-earmark-pdf"></i> Ver
+                  </a>
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              </td>
+
+              <td>
+                <div class="btn-group btn-group-sm">
+                  <!-- Ver -->
+                  <button class="btn btn-outline-info" data-bs-toggle="modal"
+                          data-bs-target="#modalVer{{ p.id_personal }}">
+                    <i class="bi bi-eye"></i>
+                  </button>
+                  <!-- Editar -->
+                  <button class="btn btn-outline-primary" data-bs-toggle="modal"
+                          data-bs-target="#modalEditar{{ p.id_personal }}">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <!-- Eliminar -->
+                  <a href="{{ url_for('eliminar_personal', id_personal=p.id_personal) }}"
+                     class="btn btn-outline-danger"
+                     onclick="return confirm('¿Eliminar a {{ p.nombre }}?');">
+                    <i class="bi bi-trash"></i>
+                  </a>
+                  <!-- 💵 Pagar -->
+                  <button class="btn btn-outline-success"
+                          data-bs-toggle="modal"
+                          data-bs-target="#modalPagar"
+                          data-id="{{ p.id_personal }}"
+                          data-nombre="{{ p.nombre }}">
+                    <i class="bi bi-cash-coin"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Modal Ver -->
+            <div class="modal fade" id="modalVer{{ p.id_personal }}" tabindex="-1">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title">Detalle de Personal</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                  </div>
+                  <div class="modal-body">
+                    <p><strong>ID:</strong> {{ p.id_personal }}</p>
+                    <p><strong>Nombre:</strong> {{ p.nombre }}</p>
+                    <p><strong>Cargo:</strong> {{ p.cargo }}</p>
+                    <p><strong>Salario:</strong> {{ "%.2f"|format(p.salario) }} Bs.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Modal Editar -->
+            <div class="modal fade" id="modalEditar{{ p.id_personal }}" tabindex="-1">
+              <div class="modal-dialog">
+                <form method="POST" action="{{ url_for('editar_personal', id_personal=p.id_personal) }}" class="modal-content">
+                  <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Editar Personal</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                  </div>
+                  <div class="modal-body row g-3">
+                    <div class="col-md-6">
+                      <label class="form-label">Nombre</label>
+                      <input type="text" name="nombre" class="form-control" value="{{ p.nombre }}" required>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label">Cargo</label>
+                      <input type="text" name="cargo" class="form-control" value="{{ p.cargo }}" required>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label">Salario</label>
+                      <input type="number" step="0.01" name="salario" class="form-control" value="{{ p.salario }}" required>
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Actualizar</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Nuevo Personal -->
+<div class="modal fade" id="modalNuevo" tabindex="-1">
+  <div class="modal-dialog">
+    <form method="POST" action="{{ url_for('nuevo_personal') }}" class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title">Nuevo Personal</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Nombre</label>
+          <input type="text" name="nombre" class="form-control" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Cargo</label>
+          <input type="text" name="cargo" class="form-control" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Salario</label>
+          <input type="number" step="0.01" name="salario" class="form-control" required>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-success">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+
+
+<!-- Modal Pagar Personal -->
+<div class="modal fade" id="modalPagar" tabindex="-1">
+  <div class="modal-dialog">
+    <form method="POST" action="{{ url_for('pagar_personal') }}" class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title"><i class="bi bi-cash-coin"></i> Registrar Pago</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" name="id_personal" id="id_personal">
+        <div class="mb-3">
+          <label>Personal:</label>
+          <input type="text" id="nombre_personal" class="form-control" readonly>
+        </div>
+        <div class="mb-3">
+          <label>Monto (Bs.)</label>
+          <input type="number" step="0.01" name="monto" id="monto_personal" class="form-control" readonly>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-success">Confirmar Pago</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  const modalPagar = document.getElementById('modalPagar');
+  modalPagar.addEventListener('show.bs.modal', event => {
+    const button = event.relatedTarget;
+    const id = button.getAttribute('data-id');
+    const nombre = button.getAttribute('data-nombre');
+    const fila = button.closest('tr');
+    const salario = fila.querySelector('td:nth-child(4)').textContent.trim(); // lee salario de la tabla
+
+    document.getElementById('id_personal').value = id;
+    document.getElementById('nombre_personal').value = nombre;
+    document.getElementById('monto_personal').value = salario.replace(' Bs.', '').trim();
+  });
+</script>
+
+
+
+{% endblock %}

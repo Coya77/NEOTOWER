@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block title %}Mis Reservas{% endblock %}
+{% block content %}
+
+<div class="container mt-4">
+
+  <!-- Encabezado -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="text-primary mb-0">
+      <i class="bi bi-calendar-check"></i> Mis Reservas
+    </h3>
+    <a href="{{ url_for('nueva_reserva') }}" class="btn btn-dark shadow-sm">
+      <i class="bi bi-plus-circle"></i> Nueva Reserva
+    </a>
+  </div>
+
+  <!-- Galería de referencias -->
+<section class="mb-5">
+  <div class="text-center mb-4">
+    <h4 class="fw-bold text-primary mb-1">
+      <i class="bi bi-building"></i> Ambientes Disponibles en NEOTOWER
+    </h4>
+    <p class="text-muted">Explora nuestros espacios modernos y cómodos para tus actividades.</p>
+  </div>
+
+  <div class="row justify-content-center g-4">
+
+    <!-- Gimnasio -->
+    <div class="col-lg-3 col-md-4 col-sm-6">
+      <div class="card border-0 shadow-sm h-100 rounded-4 overflow-hidden hover-zoom">
+        <img src="{{ url_for('static', filename='images/img3.jpg') }}" 
+             class="card-img-top" alt="Gimnasio">
+        <div class="card-body text-center">
+          <h6 class="fw-bold text-primary mb-0">
+            <i class="bi bi-dumbbell"></i> Gimnasio
+          </h6>
+          <small class="text-muted">Mantente activo y en forma</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Piscina -->
+    <div class="col-lg-3 col-md-4 col-sm-6">
+      <div class="card border-0 shadow-sm h-100 rounded-4 overflow-hidden hover-zoom">
+        <img src="{{ url_for('static', filename='images/img2.jpeg') }}" 
+             class="card-img-top" alt="Piscina">
+        <div class="card-body text-center">
+          <h6 class="fw-bold text-primary mb-0">
+            <i class="bi bi-droplet"></i> Piscina
+          </h6>
+          <small class="text-muted">Disfruta de un baño relajante</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Salón de eventos -->
+    <div class="col-lg-3 col-md-4 col-sm-6">
+      <div class="card border-0 shadow-sm h-100 rounded-4 overflow-hidden hover-zoom">
+        <img src="{{ url_for('static', filename='images/img4.jpg') }}" 
+             class="card-img-top" alt="Salón de eventos">
+        <div class="card-body text-center">
+          <h6 class="fw-bold text-primary mb-0">
+            <i class="bi bi-people-fill"></i> Salón de Eventos
+          </h6>
+          <small class="text-muted">Ideal para reuniones o celebraciones</small>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Estilo hover personalizado -->
+<style>
+  .hover-zoom img {
+    transition: transform 0.5s ease, opacity 0.4s ease;
+  }
+  .hover-zoom:hover img {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+  .card-body h6 {
+    font-size: 1rem;
+  }
+</style>
+
+
+  <hr class="my-4">
+
+  <!-- Tabla de Reservas -->
+  {% if reservas %}
+  <div class="table-responsive">
+    <table class="table table-hover align-middle shadow-sm">
+      <thead class="table-primary text-center">
+        <tr>
+          <th>ID</th>
+          <th>Ambiente</th>
+          <th>Fecha</th>
+          <th>Horario</th>
+          <th>Estado</th>
+          <th>Costo (Bs)</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody class="text-center">
+        {% for r in reservas %}
+        <tr>
+          <td>{{ r.id_reserva }}</td>
+          <td>{{ r.tipo }}</td>
+          <td>
+            {% if r.fecha_inicio %}
+              {{ r.fecha_inicio.strftime('%d/%m/%Y') }}
+            {% else %}
+              -
+            {% endif %}
+          </td>
+          <td>{{ r.horario }}</td>
+          <td>
+            <span class="badge bg-{{ r.estado_badge }}">{{ r.estado|capitalize }}</span>
+          </td>
+          <td>{{ "%.2f"|format(r.costo_reserva) }}</td>
+          <td>
+            <!-- Botón Ver Detalle -->
+            <a href="{{ url_for('detalle_reserva', id_reserva=r.id_reserva) }}"
+               class="btn btn-sm btn-info" title="Ver Detalle">
+              <i class="bi bi-eye"></i>
+            </a>
+
+            <!-- Botón Eliminar -->
+            <form action="{{ url_for('eliminar_reserva', id_reserva=r.id_reserva) }}"
+                  method="POST" class="d-inline">
+              <button class="btn btn-sm btn-danger"
+                      onclick="return confirm('¿Eliminar esta reserva?')"
+                      title="Eliminar">
+                <i class="bi bi-trash"></i>
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="alert alert-info shadow-sm">
+    <i class="bi bi-info-circle"></i> No tienes reservas registradas por el momento.
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}

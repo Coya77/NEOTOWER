@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2><i class="bi bi-gear-wide-connected me-2"></i> Gestión de Tickets y Mantenimiento</h2>
+    <p class="text-muted">Resumen de actividad y rendimiento operativo.</p>
+
+    <!-- Contadores -->
+    <div class="row text-center mt-4">
+        <div class="col-md-4">
+            <div class="card border-start border-primary shadow-sm">
+                <div class="card-body">
+                    <h5 class="fw-bold text-primary">{{ contadores.abiertos or 0 }}</h5>
+                    <p class="text-muted mb-0">Tickets Abiertos</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-start border-warning shadow-sm">
+                <div class="card-body">
+                    <h5 class="fw-bold text-warning">{{ contadores.progreso or 0 }}</h5>
+                    <p class="text-muted mb-0">En Progreso</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-start border-success shadow-sm">
+                <div class="card-body">
+                    <h5 class="fw-bold text-success">{{ contadores.cerrados or 0 }}</h5>
+                    <p class="text-muted mb-0">Tickets Cerrados</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI -->
+    <div class="mt-4">
+        <div class="alert alert-info">
+            ⏱️ <strong>Tiempo promedio de cierre:</strong>
+            {{ kpi.horas_promedio_cierre or 0 }} horas
+        </div>
+    </div>
+
+    <!-- Tickets recientes -->
+    <div class="card shadow-sm mt-3">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="bi bi-list-task me-2"></i>Tickets recientes</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-sm align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Descripción</th>
+                        <th>Fecha</th>
+                        <th>Estado</th>
+                        <th>Técnico Asignado</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in recientes %}
+                    <tr>
+                        <td>{{ t.id_incidente }}</td>
+                        <td>{{ t.descripcion[:60] }}...</td>
+                        <td>{{ t.fecha_reporte.strftime('%d/%m/%Y') }}</td>
+                        <td>
+                            {% if t.estado == 'Abierto' %}
+                            <span class="badge bg-secondary">Abierto</span>
+                            {% elif t.estado == 'En Progreso' %}
+                            <span class="badge bg-warning text-dark">En Progreso</span>
+                            {% else %}
+                            <span class="badge bg-success">Cerrado</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ t.tecnico or 'No asignado' }}</td>
+                        <td>
+                            <a href="{{ url_for('asignar_tecnico', id_incidente=t.id_incidente) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-person-plus"></i> Asignar
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" class="text-center text-muted">No hay tickets registrados.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Acceso rápido -->
+    <div class="mt-4 d-flex justify-content-end">
+        <a href="{{ url_for('admin_historial_tickets') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-clock-history"></i> Ver Historial Completo
+        </a>
+    </div>
+</div>
+{% endblock %}

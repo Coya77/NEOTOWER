@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}Gestión de Consumos{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-speedometer2"></i> Gestión de Consumos</h2>
+    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalNuevo">
+      <i class="bi bi-plus-circle"></i> Nuevo Consumo
+    </button>
+  </div>
+
+  <!-- Tabla -->
+  <div class="card">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle">
+          <thead class="table-dark">
+            <tr>
+              <th>ID</th>
+              <th>Tipo</th>
+              <th>Fecha</th>
+              <th>Agua (m³)</th>
+              <th>Electricidad (kWh)</th>
+              <th>Gas (m³)</th>
+              <th>Alerta</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in consumos %}
+            <tr>
+              <td>{{ c.id_consumo }}</td>
+              <td>{{ c.tipo|capitalize }}</td>
+              <td>
+                {% if c.fecha_lectura %}
+                  {{ c.fecha_lectura.strftime('%d/%m/%Y') }}
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+              <td>{{ c.consumo_agua or "-" }}</td>
+              <td>{{ c.consumo_electricidad or "-" }}</td>
+              <td>{{ c.consumo_gas or "-" }}</td>
+              <td>
+                {% if c.alerta %}
+                  <span class="badge bg-danger">⚠️ Alerta</span>
+                {% else %}
+                  <span class="badge bg-success">Normal</span>
+                {% endif %}
+              </td>
+              <td>
+                <a href="{{ url_for('eliminar_consumo', id_consumo=c.id_consumo) }}"
+                   class="btn btn-outline-danger btn-sm"
+                   onclick="return confirm('¿Eliminar consumo de {{ c.tipo }}?');">
+                  <i class="bi bi-trash"></i>
+                </a>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="8" class="text-center text-muted py-4">
+                <i class="bi bi-journal-x display-6 d-block mb-2"></i>
+                No hay consumos registrados
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Nuevo -->
+<div class="modal fade" id="modalNuevo" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="{{ url_for('nuevo_consumo') }}">
+        <div class="modal-header">
+          <h5 class="modal-title">Nuevo Consumo</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Tipo</label>
+            <select class="form-select" name="tipo" required>
+              <option value="agua">Agua</option>
+              <option value="luz">Luz</option>
+              <option value="gas">Gas</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Consumo de Agua (m³)</label>
+            <input type="number" step="0.01" name="consumo_agua" class="form-control">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Consumo de Electricidad (kWh)</label>
+            <input type="number" step="0.01" name="consumo_electricidad" class="form-control">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Consumo de Gas (m³)</label>
+            <input type="number" step="0.01" name="consumo_gas" class="form-control">
+          </div>
+
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" name="alerta" id="alerta">
+            <label class="form-check-label" for="alerta">Generar alerta</label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

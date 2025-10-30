@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Detalle de Incidencia{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h3><i class="bi bi-info-circle me-2"></i> Detalle del Ticket #{{ incidencia.id_incidente }}</h3>
+  <hr>
+
+  <dl class="row">
+    <dt class="col-sm-3">Descripción:</dt>
+    <dd class="col-sm-9">{{ incidencia.descripcion }}</dd>
+
+    <dt class="col-sm-3">Gravedad:</dt>
+    <dd class="col-sm-9">{{ incidencia.gravedad }}</dd>
+
+    <dt class="col-sm-3">Estado:</dt>
+    <dd class="col-sm-9">{{ incidencia.estado }}</dd>
+
+    <dt class="col-sm-3">Fecha de Reporte:</dt>
+    <dd class="col-sm-9">{{ incidencia.fecha_reporte.strftime('%d/%m/%Y') if incidencia.fecha_reporte else '-' }}</dd>
+
+    <dt class="col-sm-3">Fecha de Cierre:</dt>
+    <dd class="col-sm-9">{{ incidencia.fecha_cierre.strftime('%d/%m/%Y') if incidencia.fecha_cierre else '-' }}</dd>
+
+    <dt class="col-sm-3">Técnico Asignado:</dt>
+    <dd class="col-sm-9">{{ incidencia.tecnico or 'No asignado' }}</dd>
+
+    <dt class="col-sm-3">Evidencia:</dt>
+    <dd class="col-sm-9">
+    {% if incidencia.evidencia %}
+        <img src="{{ url_for('static', filename='uploads/' ~ incidencia.evidencia) }}"
+            alt="Evidencia"
+            class="img-fluid rounded shadow mt-2"
+            style="max-width: 400px;">
+    {% else %}
+        <span class="text-muted">No se adjuntó evidencia.</span>
+    {% endif %}
+    </dd>
+
+  </dl>
+
+  <div class="mt-3">
+    <a href="{{ url_for('gestion_incidentes') }}" class="btn btn-secondary">
+      <i class="bi bi-arrow-left"></i> Volver a la gestión
+    </a>
+  </div>
+</div>
+{% endblock %}

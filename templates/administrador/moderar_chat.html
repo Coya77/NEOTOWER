@@ -1,0 +1,78 @@
+<!-- templates/administrador/moderar_chat.html (solo borrado, lista todos) -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2><i class="bi bi-chat-square-text"></i> Moderar Chat</h2>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary mb-3">Volver al Dashboard</a>
+
+    <!-- Flashes -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Lista de mensajes (todos para admin) -->
+    <div class="card shadow">
+        <div class="card-header">
+            <h5>Todos los Mensajes</h5>
+        </div>
+        <div class="card-body">
+            {% if mensajes and mensajes|length > 0 %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Usuario</th>
+                                <th>Mensaje</th>
+                                <th>Fecha</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for msg in mensajes %}
+                            <tr>
+                                <td>{{ msg.id_mensaje }}</td>
+                                <td><strong>{{ msg.nombre_usuario }}</strong></td>
+                                <td>{{ msg.mensaje[:50] }}{% if msg.mensaje|length > 50 %}...{% endif %}</td>
+                                <td>{{ msg.fecha_envio.strftime('%d/%m/%Y %H:%M') if msg.fecha_envio else 'N/A' }}</td>
+                                <td>
+                                    <span class="badge {{ 'bg-success' if (msg.estado == 'visible' or msg.estado is none) else 'bg-danger' }}">
+                                        {{ 'Visible' if (msg.estado == 'visible' or msg.estado is none) else 'Eliminado' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if msg.estado != 'eliminado' %}
+                                    <form method="POST" action="{{ url_for('chat.eliminar_mensaje', id_mensaje=msg.id_mensaje) }}" style="display: inline;" onsubmit="return confirm('¿Eliminar este mensaje?');">
+                                        <button type="submit" class="btn btn-danger btn-sm">
+                                            <i class="bi bi-trash"></i> Eliminar
+                                        </button>
+                                    </form>
+                                    {% else %}
+                                    <span class="text-muted">Eliminado</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-muted">Mostrando {{ mensajes|length }} mensajes.</p>
+            {% else %}
+                <div class="alert alert-info text-center">
+                    <h6><i class="bi bi-inbox"></i> No Hay Mensajes</h6>
+                    <p>No se han enviado mensajes en el chat aún.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

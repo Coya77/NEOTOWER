@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Gestión de Accesos{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Gestión de Accesos</h2>
+
+    <!-- Botón crear nuevo acceso -->
+    <div class="mb-3">
+        <a href="{{ url_for('crear_acceso') }}" class="btn btn-success">
+            <i class="fa fa-plus"></i> Crear Nuevo Acceso
+        </a>
+    </div>
+
+    <!-- Tabla de accesos -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID Acceso</th>
+                    <th>Residente</th>
+                    <th>Tipo</th>
+                    <th>Fecha</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for acceso in accesos %}
+                <tr>
+                    <td>{{ acceso.id_acceso }}</td>
+                    <td>{{ acceso.residente }}</td>
+                    <td>{{ acceso.tipo }}</td>
+                    <td>{{ acceso.fecha.strftime('%d/%m/%Y %H:%M') if acceso.fecha else 'N/A' }}</td>
+                    <td>
+                        {% if acceso.estado == 'activo' %}
+                            <span class="badge bg-success">{{ acceso.estado }}</span>
+                        {% elif acceso.estado == 'pendiente' %}
+                            <span class="badge bg-warning text-dark">{{ acceso.estado }}</span>
+                        {% else %}
+                            <span class="badge bg-danger">{{ acceso.estado }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('editar_acceso', id_acceso=acceso.id_acceso) }}" class="btn btn-sm btn-primary">
+                            <i class="fa fa-edit"></i> Editar
+                        </a>
+                        <a href="{{ url_for('eliminar_acceso', id_acceso=acceso.id_acceso) }}" 
+                           class="btn btn-sm btn-danger" 
+                           onclick="return confirm('¿Seguro que deseas eliminar este acceso?');">
+                            <i class="fa fa-trash"></i> Eliminar
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center">No se encontraron accesos</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

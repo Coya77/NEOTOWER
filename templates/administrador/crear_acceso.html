@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Crear Acceso{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Crear Nuevo Acceso</h2>
+
+    <form method="POST" action="{{ url_for('crear_acceso') }}" class="needs-validation" novalidate>
+        <!-- Selección de Residente -->
+        <div class="mb-3">
+            <label for="id_residente" class="form-label">Residente</label>
+            <select class="form-select" id="id_residente" name="id_residente" required>
+                <option value="">Seleccione un residente</option>
+                {% for r in residentes %}
+                <option value="{{ r.id_residente }}">{{ r.nombre }} {{ r.apellido }}</option>
+                {% endfor %}
+            </select>
+            <div class="invalid-feedback">Debe seleccionar un residente.</div>
+        </div>
+
+        <!-- Tipo de acceso -->
+        <div class="mb-3">
+            <label for="tipo" class="form-label">Tipo de Acceso</label>
+            <select class="form-select" id="tipo" name="tipo" required>
+                <option value="">Seleccione tipo</option>
+                <option value="tarjeta">Tarjeta</option>
+                <option value="huella">Huella</option>
+                <option value="qr">QR</option>
+                <option value="otro">Otro</option>
+            </select>
+            <div class="invalid-feedback">Debe seleccionar un tipo de acceso.</div>
+        </div>
+
+        <!-- Estado -->
+        <div class="mb-3">
+            <label for="estado" class="form-label">Estado</label>
+            <select class="form-select" id="estado" name="estado" required>
+                <option value="activo">Activo</option>
+                <option value="pendiente">Pendiente</option>
+                <option value="inactivo">Inactivo</option>
+            </select>
+            <div class="invalid-feedback">Debe seleccionar un estado.</div>
+        </div>
+
+        <!-- Botones -->
+        <div class="d-flex justify-content-between">
+            <a href="{{ url_for('gestion_accesos') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Cancelar
+            </a>
+            <button type="submit" class="btn btn-success">
+                <i class="fas fa-save"></i> Guardar
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+(() => {
+    'use strict'
+    const forms = document.querySelectorAll('.needs-validation')
+    Array.from(forms).forEach(form => {
+        form.addEventListener('submit', event => {
+            if (!form.checkValidity()) {
+                event.preventDefault()
+                event.stopPropagation()
+            }
+            form.classList.add('was-validated')
+        }, false)
+    })
+})()
+</script>
+{% endblock %}

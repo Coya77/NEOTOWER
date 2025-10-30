@@ -1,0 +1,323 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <h2 class="mb-0"><i class="bi bi-activity me-2"></i>Dashboard de Consumo</h2>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-success"
+       href="{{ url_for('admin_consumo_export_excel',
+                        fecha_inicio=filtros.fecha_inicio,
+                        fecha_fin=filtros.fecha_fin,
+                        recurso=filtros.recurso,
+                        departamento=filtros.departamento) }}">
+      <i class="bi bi-file-earmark-excel"></i> Excel
+    </a>
+    <a class="btn btn-outline-danger"
+       href="{{ url_for('admin_consumo_export_pdf',
+                        fecha_inicio=filtros.fecha_inicio,
+                        fecha_fin=filtros.fecha_fin,
+                        recurso=filtros.recurso,
+                        departamento=filtros.departamento) }}">
+      <i class="bi bi-file-earmark-pdf"></i> PDF
+    </a>
+  </div>
+
+  <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i> Volver al panel
+  </a>
+</div>
+
+<!-- Alertas -->
+{% if alertas %}
+  {% for a in alertas %}
+    <div class="alert alert-{{ 'danger' if a.nivel=='danger' else ('warning' if a.nivel=='warning' else 'info') }} shadow-sm" role="alert">
+      <i class="bi {{ 'bi-exclamation-octagon' if a.nivel=='danger' else ('bi-exclamation-triangle' if a.nivel=='warning' else 'bi-info-circle') }} me-2"></i>
+      {{ a.mensaje }}
+    </div>
+  {% endfor %}
+{% endif %}
+
+<!-- Filtros (punto 5) -->
+<div class="card mb-4 shadow-sm">
+  <div class="card-header"><i class="bi bi-filter-circle me-2"></i>Filtros</div>
+  <div class="card-body">
+    <form class="row g-3" method="get" action="{{ url_for('dashboardconsumo') }}">
+      <div class="col-md-3">
+        <label class="form-label">Fecha inicio</label>
+        <input type="date" class="form-control" name="fecha_inicio" value="{{ filtros.fecha_inicio }}">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Fecha fin</label>
+        <input type="date" class="form-control" name="fecha_fin" value="{{ filtros.fecha_fin }}">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Recurso</label>
+        <select class="form-select" name="recurso">
+          <option value="">Todos</option>
+          {% for r in opciones.recursos %}
+            <option value="{{ r }}" {{ 'selected' if filtros.recurso|lower==r|lower else '' }}>{{ r }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Departamento</label>
+        <select class="form-select" name="departamento">
+          <option value="">Todos</option>
+          {% for d in opciones.departamentos %}
+            <option value="{{ d }}" {{ 'selected' if filtros.departamento==d else '' }}>{{ d }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-12 d-flex gap-2">
+        <button class="btn btn-primary"><i class="bi bi-search"></i> Aplicar</button>
+        <a class="btn btn-outline-secondary" href="{{ url_for('dashboardconsumo') }}"><i class="bi bi-x-circle"></i> Limpiar</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- KPIs (punto 1) -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <div class="text-muted small">Consumo total (filtrado)</div>
+            <div class="h4 mb-0">{{ '{:,.2f}'.format(resumen.total_consumo) }}</div>
+          </div>
+          <i class="bi bi-lightning-charge fs-3 text-warning"></i>
+        </div>
+        <div class="text-muted small mt-2">Recursos: {{ resumen.recursos|join(', ') }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <div class="text-muted small">Promedio diario</div>
+            <div class="h4 mb-0">{{ '{:,.2f}'.format(resumen.consumo_prom_dia) }}</div>
+          </div>
+          <i class="bi bi-graph-up fs-3 text-primary"></i>
+        </div>
+        <div class="text-muted small mt-2">Máximo día: {{ '{:,.2f}'.format(resumen.consumo_max_dia) }}{% if resumen.dia_pico %} ({{ resumen.dia_pico }}){% endif %}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <div class="text-muted small">Mes actual</div>
+            <div class="h4 mb-0">{{ '{:,.2f}'.format(resumen.cons_mes_actual) }}</div>
+          </div>
+          <i class="bi bi-calendar2-week fs-3 text-success"></i>
+        </div>
+        <div class="small mt-2 {{ 'text-success' if resumen.growth_mes>=0 else 'text-danger' }}">
+          {{ '+' if resumen.growth_mes>=0 else '' }}{{ resumen.growth_mes }}% vs mes anterior
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <div class="text-muted small">P95 / Mediana</div>
+            <div class="h4 mb-0">{{ '{:,.2f}'.format(resumen.p95_consumo) }} / {{ '{:,.2f}'.format(resumen.mediana) }}</div>
+          </div>
+          <i class="bi bi-activity fs-3 text-danger"></i>
+        </div>
+        {% if resumen.costo_total is not none %}
+  <div class="text-muted small mt-2">Costo total: Bs {{ '{:,.2f}'.format(resumen.costo_total) }}</div>
+{% endif %}
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Gráficos (punto 2) -->
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-header"><i class="bi bi-graph-up-arrow me-2"></i>Consumo diario</div>
+      <div class="card-body"><canvas id="lineDiario"></canvas></div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-header"><i class="bi bi-layers-half me-2"></i>Consumo mensual por recurso (apilado)</div>
+      <div class="card-body"><canvas id="stackRecursos"></canvas></div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-header"><i class="bi bi-pie-chart me-2"></i>Participación por recurso</div>
+      <div class="card-body"><canvas id="donaRecurso"></canvas></div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-header"><i class="bi bi-building me-2"></i>Top departamentos por consumo</div>
+      <div class="card-body"><canvas id="barDeptos"></canvas></div>
+    </div>
+  </div>
+
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-header"><i class="bi bi-hurricane me-2"></i>Distribución de lecturas</div>
+      <div class="card-body"><canvas id="histConsumo"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- Recomendaciones (punto 4) -->
+<div class="card my-4 shadow-sm">
+  <div class="card-header"><i class="bi bi-lightbulb me-2"></i>Recomendaciones</div>
+  <div class="card-body">
+    {% if recomendaciones and recomendaciones|length>0 %}
+      <ul class="mb-0">
+        {% for r in recomendaciones %}
+          <li>{{ r }}</li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <span class="text-muted">Sin recomendaciones por ahora.</span>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Tablas (drill-down del punto 5) -->
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-header"><i class="bi bi-graph-up-arrow me-2"></i>Picos de consumo (Top 10 días)</div>
+      <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Fecha</th>
+              <th>Consumo</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in tablas.picos_recientes %}
+            <tr>
+              <td>{{ p.fecha }}</td>
+              <td>{{ '{:,.2f}'.format(p.consumo) }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="2" class="text-muted text-center">Sin picos en el rango</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-header"><i class="bi bi-building-gear me-2"></i>Top departamentos</div>
+      <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Depto</th>
+              <th>Consumo</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for d in tablas.top_deptos %}
+            <tr>
+              <td>{{ d.departamento }}</td>
+              <td>{{ '{:,.2f}'.format(d.consumo) }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="2" class="text-muted text-center">Sin datos por departamento</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-header"><i class="bi bi-clock-history me-2"></i>Lecturas recientes</div>
+      <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Fecha</th>
+              <th>Recurso</th>
+              <th>Consumo</th>
+              {% if tablas.lecturas_recientes and tablas.lecturas_recientes[0].get('departamento') is not none %}
+              <th>Depto</th>
+              {% endif %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for l in tablas.lecturas_recientes %}
+            <tr>
+              <td>{{ l.fecha }}</td>
+              <td>{{ l.recurso }}</td>
+              <td>{{ '{:,.2f}'.format(l.consumo) }}</td>
+              {% if l.get('departamento') is not none %}<td>{{ l.departamento }}</td>{% endif %}
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="text-muted text-center">Sin lecturas recientes</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JS: Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+  // Serie diaria
+  new Chart(document.getElementById('lineDiario'), {
+    type: 'line',
+    data: { labels: {{ charts.dias_labels|tojson }}, datasets: [{ label: 'Consumo', data: {{ charts.dias_values|tojson }}, tension: .3, fill: true }] },
+    options: { responsive: true, plugins: { legend: { display: true } } }
+  });
+
+  // Apilado por recurso (mensual)
+  const sMeses = {{ charts.stacked_meses|tojson }};
+  const sRec   = {{ charts.stacked_recursos|tojson }};
+  const sData  = {{ charts.stacked_data|tojson }};
+  new Chart(document.getElementById('stackRecursos'), {
+    type: 'bar',
+    data: { labels: sMeses, datasets: sRec.map(r => ({ label: r, data: sData[r], stack: 'recursos' })) },
+    options: { responsive: true, plugins: { legend: { position: 'bottom' } }, scales: { x: { stacked: true }, y: { stacked: true } } }
+  });
+
+  // Dona por recurso
+  new Chart(document.getElementById('donaRecurso'), {
+    type: 'doughnut',
+    data: { labels: {{ charts.dona_labels|tojson }}, datasets: [{ data: {{ charts.dona_values|tojson }} }] },
+    options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+  });
+
+  // Top departamentos
+  new Chart(document.getElementById('barDeptos'), {
+    type: 'bar',
+    data: { labels: {{ charts.top_deptos_labels|tojson }}, datasets: [{ label: 'Consumo', data: {{ charts.top_deptos_values|tojson }} }] },
+    options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } } }
+  });
+
+  // Histograma de lecturas
+  new Chart(document.getElementById('histConsumo'), {
+    type: 'bar',
+    data: { labels: {{ charts.hist_labels|tojson }}, datasets: [{ label: '# Lecturas', data: {{ charts.hist_values|tojson }} }] },
+    options: { responsive: true, plugins: { legend: { display: false } } }
+  });
+</script>
+{% endblock %}

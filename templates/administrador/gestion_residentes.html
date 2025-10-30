@@ -1,0 +1,243 @@
+<!-- templates/administrador/gestion_residentes.html -->
+{% extends "base.html" %}
+
+{% block title %}Gestión de Residentes{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-3">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0"><i class="bi bi-people-fill me-2"></i>Gestión de Residentes</h2>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNuevoResidente">
+      <i class="bi bi-person-plus"></i> Nuevo Residente
+    </button>
+  </div>
+
+  <!-- Estadísticas -->
+  <div class="row mb-4">
+    <div class="col-md-3 mb-3">
+      <div class="card text-white bg-primary h-100">
+        <div class="card-body text-center">
+          <h5 class="card-title">Total Residentes</h5>
+          <p class="display-6 mb-0">{{ estadisticas.total_residentes }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 mb-3">
+      <div class="card text-white bg-success h-100">
+        <div class="card-body text-center">
+          <h5 class="card-title">Activos</h5>
+          <p class="display-6 mb-0">{{ estadisticas.residentes_activos }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 mb-3">
+      <div class="card text-white bg-warning h-100">
+        <div class="card-body text-center">
+          <h5 class="card-title">Con Deudas</h5>
+          <p class="display-6 mb-0">{{ estadisticas.con_deudas }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 mb-3">
+      <div class="card text-white bg-info h-100">
+        <div class="card-body text-center">
+          <h5 class="card-title">Nuevos este Mes</h5>
+          <p class="display-6 mb-0">{{ estadisticas.nuevos_mes }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label for="filtro-estado" class="form-label">Estado</label>
+          <select class="form-select" id="filtro-estado">
+            <option value="">Todos</option>
+            <option value="activo">Activo</option>
+            <option value="inactivo">Inactivo</option>
+            <option value="moroso">Moroso</option>
+            <option value="pendiente">Pendiente</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label for="filtro-departamento" class="form-label">Departamento</label>
+          <select class="form-select" id="filtro-departamento">
+            <option value="">Todos</option>
+            {% for depto in departamentos %}
+            <option value="{{ depto.id_depto }}">Piso {{ depto.piso }} - Depto {{ depto.numero }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label for="busqueda" class="form-label">Búsqueda</label>
+          <div class="input-group">
+            <input type="text" class="form-control" id="busqueda" placeholder="Nombre, email o teléfono...">
+            <button class="btn btn-outline-secondary" type="button" id="btn-buscar">
+              <i class="bi bi-search"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Listado de Residentes</h5>
+      <span class="badge bg-secondary">{{ residentes|length }} residentes</span>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>#</th>
+              <th>Nombre</th>
+              <th>Email</th>
+              <th>Teléfono</th>
+              <th>Departamento</th>
+              <th>Estado</th>
+              <th>Fecha Registro</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in residentes %}
+            <tr>
+              <td>{{ loop.index }}</td>
+              <td>
+                <strong>{{ r.nombre }} {{ r.apellido }}</strong>
+                {% if r.es_propietario %}
+                <span class="badge bg-info ms-1">P</span>
+                {% endif %}
+              </td>
+              <td>{{ r.email }}</td>
+              <td>{{ r.telefono or 'N/A' }}</td>
+              <td>
+                {% if r.departamentos %}
+                  {% for d in r.departamentos %}
+                  <span class="badge bg-secondary">P{{ d.piso }} - {{ d.numero }}</span>
+                  {% endfor %}
+                {% else %}
+                  <span class="text-muted">Sin asignar</span>
+                {% endif %}
+              </td>
+              <td><span class="badge bg-{{ r.estado_badge }}">{{ r.estado }}</span></td>
+              <td>
+                {% if r.fecha_registro.__class__.__name__ in ['date','datetime'] %}
+                  {{ r.fecha_registro.strftime('%d/%m/%Y') }}
+                {% else %}
+                  {{ r.fecha_registro }}
+                {% endif %}
+              </td>
+              <td>
+                <div class="btn-group btn-group-sm">
+                  <a href="{{ url_for('admin_perfil_residente', id_residente=r.id_residente) }}" class="btn btn-outline-primary">
+                    <i class="bi bi-eye"></i>
+                  </a>
+                  <a href="{{ url_for('admin_editar_residente', id_residente=r.id_residente) }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-pencil"></i>
+                  </a>
+                  <a href="{{ url_for('admin_historial_residente', id_residente=r.id_residente) }}" class="btn btn-outline-info">
+                    <i class="bi bi-clock-history"></i>
+                  </a>
+                  {% if r.estado == 'activo' %}
+                  <a href="{{ url_for('admin_cambiar_estado_residente', id_residente=r.id_residente, nuevo_estado='inactivo') }}" class="btn btn-outline-warning">
+                    <i class="bi bi-pause-circle"></i>
+                  </a>
+                  {% else %}
+                  <a href="{{ url_for('admin_cambiar_estado_residente', id_residente=r.id_residente, nuevo_estado='activo') }}" class="btn btn-outline-success">
+                    <i class="bi bi-play-circle"></i>
+                  </a>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="8" class="text-center text-muted py-4">
+                <i class="bi bi-people display-4 d-block mb-2"></i>
+                No hay residentes registrados
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal nuevo residente -->
+<div class="modal fade" id="modalNuevoResidente" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <form method="POST" action="{{ url_for('admin_crear_residente') }}">
+        <div class="modal-header">
+          <h5 class="modal-title">Nuevo Residente</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Nombre *</label>
+              <input type="text" name="nombre" class="form-control" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Apellido *</label>
+              <input type="text" name="apellido" class="form-control" required>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Email *</label>
+              <input type="email" name="email" class="form-control" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Teléfono</label>
+              <input type="tel" name="telefono" class="form-control">
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Contraseña Temporal *</label>
+              <input type="password" name="password" class="form-control" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Tipo de Residente *</label>
+              <select name="tipo_residente" class="form-select" required>
+                <option value="propietario">Propietario</option>
+                <option value="inquilino">Inquilino</option>
+                <option value="familiar">Familiar</option>
+              </select>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Departamento(s)</label>
+            <select class="form-select" multiple name="departamentos">
+              {% for depto in departamentos %}
+              <option value="{{ depto.id_depto }}">Piso {{ depto.piso }} - Depto {{ depto.numero }} ({{ depto.estado }})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" name="enviar_email" checked>
+            <label class="form-check-label">Enviar email de bienvenida</label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-person-plus"></i> Crear
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

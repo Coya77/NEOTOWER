@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+{% block title %}Reportes Financieros{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-3">
+
+  <!-- 🔹 Encabezado -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0 text-primary">
+      <i class="bi bi-cash-coin me-2"></i> Reportes Financieros
+    </h2>
+    <div class="d-flex gap-2">
+      <a href="{{ url_for('reportes_financieros', exportar='pdf', fecha_inicio=request.args.get('fecha_inicio'), fecha_fin=request.args.get('fecha_fin')) }}" 
+         class="btn btn-danger btn-sm">
+        <i class="bi bi-filetype-pdf"></i> Exportar PDF
+      </a>
+      <a href="{{ url_for('reportes_financieros', exportar='excel', fecha_inicio=request.args.get('fecha_inicio'), fecha_fin=request.args.get('fecha_fin')) }}" 
+         class="btn btn-success btn-sm">
+        <i class="bi bi-filetype-xls"></i> Exportar Excel
+      </a>
+    </div>
+  </div>
+
+  <!-- 🔹 Filtros -->
+  <form method="GET" action="{{ url_for('reportes_financieros') }}" class="card mb-4 shadow-sm border-0">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">Fecha inicio</label>
+          <input type="date" class="form-control" name="fecha_inicio" value="{{ request.args.get('fecha_inicio','') }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Fecha fin</label>
+          <input type="date" class="form-control" name="fecha_fin" value="{{ request.args.get('fecha_fin','') }}">
+        </div>
+        <div class="col-md-4 d-flex align-items-end gap-2">
+          <button type="submit" class="btn btn-primary w-100">
+            <i class="bi bi-search"></i> Filtrar
+          </button>
+          <a href="{{ url_for('reportes_financieros') }}" class="btn btn-outline-secondary" title="Limpiar filtros">
+            <i class="bi bi-arrow-counterclockwise"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </form>
+
+  <!-- 🔹 Resumen general -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="card text-bg-success shadow-sm">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <span>Total Ingresos (Bs.)</span>
+            <i class="bi bi-graph-up fs-4"></i>
+          </div>
+          <div class="display-6 fw-bold">{{ "{:,.2f}".format(resumen.total_ingresos or 0) }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-bg-danger shadow-sm">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <span>Total Egresos (Bs.)</span>
+            <i class="bi bi-graph-down fs-4"></i>
+          </div>
+          <div class="display-6 fw-bold">{{ "{:,.2f}".format(resumen.total_egresos or 0) }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-bg-info shadow-sm">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <span>Saldo Final (Bs.)</span>
+            <i class="bi bi-balance-scale fs-4"></i>
+          </div>
+          <div class="display-6 fw-bold">{{ "{:,.2f}".format(resumen.saldo_final or 0) }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🔹 Tabla Detalle -->
+  <div class="card shadow-sm border-0">
+    <div class="card-header d-flex justify-content-between align-items-center bg-light">
+      <h5 class="mb-0"><i class="bi bi-table me-2"></i>Detalle de Movimientos</h5>
+      <span class="badge bg-secondary">{{ reportes|length }} registros</span>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle text-center">
+          <thead class="table-primary">
+            <tr>
+              <th>#</th>
+              <th>Fecha</th>
+              <th>Tipo</th>
+              <th>Descripción</th>
+              <th class="text-end">Ingresos (Bs.)</th>
+              <th class="text-end">Egresos (Bs.)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in reportes %}
+            <tr>
+              <td>{{ loop.index }}</td>
+              <td>
+                {% if r.fecha.__class__.__name__ in ['date','datetime'] %}
+                  {{ r.fecha.strftime('%Y-%m-%d') }}
+                {% else %}
+                  {{ r.fecha }}
+                {% endif %}
+              </td>
+              <td>
+                {% if r.tipo == 'Ingreso' %}
+                  <span class="badge bg-success">Ingreso</span>
+                {% else %}
+                  <span class="badge bg-danger">Egreso</span>
+                {% endif %}
+              </td>
+              <td class="text-start">{{ r.descripcion or '-' }}</td>
+              <td class="text-end">
+                {% if r.tipo == 'Ingreso' %}
+                  {{ "{:,.2f}".format(r.monto) }}
+                {% else %}-{% endif %}
+              </td>
+              <td class="text-end">
+                {% if r.tipo == 'Egreso' %}
+                  {{ "{:,.2f}".format(r.monto) }}
+                {% else %}-{% endif %}
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="6" class="text-center text-muted py-4">
+                <i class="bi bi-journal-x fs-1 d-block mb-2"></i>
+                No se encontraron movimientos financieros.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🔹 Gráfico de evolución -->
+  <div class="card mt-4 shadow-sm border-0">
+    <div class="card-header bg-light">
+      <h6 class="mb-0"><i class="bi bi-bar-chart-line me-2"></i>Evolución Mensual del Saldo</h6>
+    </div>
+    <div class="card-body">
+      <canvas id="chartSaldo" height="100"></canvas>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+(function () {
+  const movimientos = [
+    {% for r in reportes %}
+      {
+        fecha: `{% if r.fecha.__class__.__name__ in ['date','datetime'] %}{{ r.fecha.strftime('%Y-%m-%d') }}{% else %}{{ r.fecha }}{% endif %}`,
+        tipo: "{{ r.tipo }}",
+        monto: {{ r.monto|float }}
+      },
+    {% endfor %}
+  ];
+
+  const saldoMensual = {};
+  movimientos.forEach(m => {
+    const mes = m.fecha.substring(0,7);
+    if (!saldoMensual[mes]) saldoMensual[mes] = 0;
+    saldoMensual[mes] += (m.tipo === 'Ingreso' ? m.monto : -m.monto);
+  });
+
+  const labels = Object.keys(saldoMensual).sort();
+  const data = labels.map(k => saldoMensual[k]);
+
+  const ctx = document.getElementById('chartSaldo');
+  if (ctx) {
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Saldo mensual (Bs.)',
+          data,
+          borderColor: '#0d6efd',
+          backgroundColor: 'rgba(13,110,253,.1)',
+          tension: 0.35,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, title: { display: true, text: 'Saldo (Bs.)' } },
+          x: { title: { display: true, text: 'Mes' } }
+        }
+      }
+    });
+  }
+})();
+</script>
+{% endblock %}

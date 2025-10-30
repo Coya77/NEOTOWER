@@ -1,0 +1,288 @@
+<!-- templates/usuario/consumo.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-speedometer2 me-2"></i>Consumo de Servicios</h2>
+        <div class="btn-group">
+            <button class="btn btn-outline-primary" id="btn-mes-actual">
+                <i class="bi bi-calendar-month"></i> Mes Actual
+            </button>
+            <button class="btn btn-outline-secondary" id="btn-ultimos-meses">
+                <i class="bi bi-graph-up"></i> Últimos 6 Meses
+            </button>
+        </div>
+    </div>
+
+    <!-- Alertas de Consumo -->
+    <div class="row mb-4" id="alertas-consumo"></div>
+
+    <!-- Tarjetas de Consumo Actual -->
+    <div class="row mb-4">
+        <!-- Agua -->
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0"><i class="bi bi-droplet-fill me-2"></i>Agua</h5>
+                </div>
+                <div class="card-body text-center">
+                    <div class="display-4 fw-bold text-primary" id="consumo-agua-actual">0 m³</div>
+                    <div class="text-muted" id="variacion-agua">
+                        <i class="bi bi-arrow-up text-danger"></i> 0% vs mes anterior
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <small class="text-muted">Actualizado: <span id="fecha-agua">--/--/----</span></small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Electricidad -->
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="card-title mb-0"><i class="bi bi-lightning-charge-fill me-2"></i>Electricidad</h5>
+                </div>
+                <div class="card-body text-center">
+                    <div class="display-4 fw-bold text-warning" id="consumo-electricidad-actual">0 kWh</div>
+                    <div class="text-muted" id="variacion-electricidad">
+                        <i class="bi bi-arrow-up text-danger"></i> 0% vs mes anterior
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <small class="text-muted">Actualizado: <span id="fecha-electricidad">--/--/----</span></small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gas -->
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0"><i class="bi bi-fire me-2"></i>Gas</h5>
+                </div>
+                <div class="card-body text-center">
+                    <div class="display-4 fw-bold text-success" id="consumo-gas-actual">0 m³</div>
+                    <div class="text-muted" id="variacion-gas">
+                        <i class="bi bi-arrow-up text-danger"></i> 0% vs mes anterior
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <small class="text-muted">Actualizado: <span id="fecha-gas">--/--/----</span></small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos de Consumo -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="bi bi-bar-chart-fill me-2"></i>Evolución de Consumo</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="grafico-consumo" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historial Detallado -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0"><i class="bi bi-clock-history me-2"></i>Historial de Consumo</h5>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button"
+                                id="dropdownFiltroMeses" data-bs-toggle="dropdown">
+                            <i class="bi bi-filter"></i> Filtrar
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" data-meses="3">Últimos 3 meses</a></li>
+                            <li><a class="dropdown-item" href="#" data-meses="6">Últimos 6 meses</a></li>
+                            <li><a class="dropdown-item" href="#" data-meses="12">Último año</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="tabla-historial">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Agua (m³)</th>
+                                    <th>Electricidad (kWh)</th>
+                                    <th>Gas (m³)</th>
+                                    <th>Total Aprox.</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Se llenará dinámicamente -->
+                                <tr>
+                                    <td colspan="5" class="text-center">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Cargando...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// Datos de ejemplo (reemplazar por datos reales desde Flask)
+const consumoData = {
+    actual: {
+        agua: 15.5,
+        electricidad: 320,
+        gas: 8.2,
+        fecha: '2024-01-15'
+    },
+    historico: [
+        { mes: 'Ene 2024', agua: 15.5, electricidad: 320, gas: 8.2 },
+        { mes: 'Dic 2023', agua: 14.2, electricidad: 295, gas: 7.8 },
+        { mes: 'Nov 2023', agua: 13.8, electricidad: 280, gas: 7.5 },
+        { mes: 'Oct 2023', agua: 12.5, electricidad: 265, gas: 7.0 },
+        { mes: 'Sep 2023', agua: 11.8, electricidad: 250, gas: 6.8 },
+        { mes: 'Ago 2023', agua: 13.2, electricidad: 275, gas: 7.2 }
+    ]
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    cargarDatosConsumo();
+    inicializarGrafico();
+    configurarEventListeners();
+});
+
+function cargarDatosConsumo() {
+    setTimeout(() => {
+        actualizarTarjetasConsumo();
+        actualizarTablaHistorial();
+        actualizarAlertas();
+    }, 800);
+}
+
+function actualizarTarjetasConsumo() {
+    document.getElementById('consumo-agua-actual').textContent = `${consumoData.actual.agua} m³`;
+    document.getElementById('consumo-electricidad-actual').textContent = `${consumoData.actual.electricidad} kWh`;
+    document.getElementById('consumo-gas-actual').textContent = `${consumoData.actual.gas} m³`;
+
+    const fecha = new Date(consumoData.actual.fecha).toLocaleDateString();
+    document.querySelectorAll('[id^="fecha-"]').forEach(el => el.textContent = fecha);
+
+    // Calcular variaciones vs mes anterior
+    const anterior = consumoData.historico[1];
+    if (anterior) {
+        actualizarVariacion('agua', consumoData.actual.agua, anterior.agua);
+        actualizarVariacion('electricidad', consumoData.actual.electricidad, anterior.electricidad);
+        actualizarVariacion('gas', consumoData.actual.gas, anterior.gas);
+    }
+}
+
+function actualizarVariacion(tipo, actual, anterior) {
+    const variacion = (((actual / anterior) - 1) * 100).toFixed(1);
+    const elemento = document.getElementById(`variacion-${tipo}`);
+    const icono = variacion > 0 ? 'bi-arrow-up text-danger' : 'bi-arrow-down text-success';
+    elemento.innerHTML = `<i class="bi ${icono}"></i> ${Math.abs(variacion)}% vs mes anterior`;
+}
+
+function inicializarGrafico() {
+    const ctx = document.getElementById('grafico-consumo').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: consumoData.historico.map(item => item.mes),
+            datasets: [
+                {
+                    label: 'Agua (m³)',
+                    data: consumoData.historico.map(item => item.agua),
+                    borderColor: '#0d6efd',
+                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                    tension: 0.4
+                },
+                {
+                    label: 'Electricidad (kWh)',
+                    data: consumoData.historico.map(item => item.electricidad),
+                    borderColor: '#ffc107',
+                    backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                    tension: 0.4
+                },
+                {
+                    label: 'Gas (m³)',
+                    data: consumoData.historico.map(item => item.gas),
+                    borderColor: '#198754',
+                    backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                    tension: 0.4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: { title: { display: true, text: 'Evolución del Consumo Mensual' } },
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+}
+
+function actualizarTablaHistorial() {
+    const tbody = document.querySelector('#tabla-historial tbody');
+    tbody.innerHTML = consumoData.historico.map(item => {
+        const total = (item.agua + item.electricidad + item.gas).toFixed(1);
+        return `
+            <tr>
+                <td>${item.mes}</td>
+                <td>${item.agua}</td>
+                <td>${item.electricidad}</td>
+                <td>${item.gas}</td>
+                <td><strong>${total}</strong></td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function actualizarAlertas() {
+    const alertasContainer = document.getElementById('alertas-consumo');
+    const alertas = [
+        { tipo: 'warning', mensaje: '⚡ Tu consumo de electricidad es 15% mayor que el mes anterior', icono: 'bi-lightning-charge' },
+        { tipo: 'success', mensaje: '💧 Consumo de agua dentro del rango normal', icono: 'bi-droplet' }
+    ];
+    alertasContainer.innerHTML = alertas.map(a => `
+        <div class="col-12">
+            <div class="alert alert-${a.tipo} alert-dismissible fade show">
+                <i class="bi ${a.icono} me-2"></i>${a.mensaje}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function configurarEventListeners() {
+    document.querySelectorAll('.dropdown-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            const meses = parseInt(this.dataset.meses);
+            filtrarHistorial(meses);
+        });
+    });
+}
+
+function filtrarHistorial(meses) {
+    const dataFiltrada = consumoData.historico.slice(0, meses);
+    console.log("Historial filtrado", dataFiltrada);
+    // Aquí podrías actualizar tabla y gráfico con la data filtrada
+}
+</script>
+{% endblock %}

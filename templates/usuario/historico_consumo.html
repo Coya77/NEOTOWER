@@ -1,0 +1,283 @@
+<!-- templates/usuario/historico_consumo.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-graph-up me-2"></i>Histórico de Consumo</h2>
+        <div class="btn-group">
+            <button class="btn btn-outline-primary" id="btn-6-meses">
+                <i class="bi bi-calendar-range"></i> 6 Meses
+            </button>
+            <button class="btn btn-outline-secondary" id="btn-12-meses">
+                <i class="bi bi-calendar-check"></i> 12 Meses
+            </button>
+            <button class="btn btn-outline-info" id="btn-todo">
+                <i class="bi bi-calendar-event"></i> Todo
+            </button>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="bi bi-funnel"></i> Filtros Avanzados
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label for="select-servicio" class="form-label">Servicio</label>
+                    <select class="form-select" id="select-servicio">
+                        <option value="todos">Todos</option>
+                        <option value="agua">Agua</option>
+                        <option value="electricidad">Electricidad</option>
+                        <option value="gas">Gas</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="select-periodo" class="form-label">Período</label>
+                    <select class="form-select" id="select-periodo">
+                        <option value="mensual">Mensual</option>
+                        <option value="trimestral">Trimestral</option>
+                        <option value="anual">Anual</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="fecha-desde" class="form-label">Desde</label>
+                    <input type="month" class="form-control" id="fecha-desde" value="{{ fecha_inicio_default }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="fecha-hasta" class="form-label">Hasta</label>
+                    <input type="month" class="form-control" id="fecha-hasta" value="{{ fecha_fin_default }}">
+                </div>
+            </div>
+            <div class="text-end mt-3">
+                <button class="btn btn-primary" id="btn-aplicar-filtros">
+                    <i class="bi bi-filter-circle"></i> Aplicar
+                </button>
+                <button class="btn btn-outline-secondary" id="btn-exportar">
+                    <i class="bi bi-download"></i> Exportar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-header"><i class="bi bi-bar-chart"></i> Consumo por Servicio</div>
+                <div class="card-body"><canvas id="grafico-barras" height="250"></canvas></div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-header"><i class="bi bi-pie-chart"></i> Distribución de Consumo</div>
+                <div class="card-body"><canvas id="grafico-torta" height="250"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header"><i class="bi bi-line-chart"></i> Evolución Temporal</div>
+                <div class="card-body"><canvas id="grafico-lineas" height="100"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Métricas -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-info text-center">
+                <div class="card-body">
+                    <h6>Consumo Promedio</h6>
+                    <div class="display-6 fw-bold" id="consumo-promedio">0</div>
+                    <small>m³/kWh</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-success text-center">
+                <div class="card-body">
+                    <h6>Meses Altos</h6>
+                    <div class="display-6 fw-bold" id="meses-altos">0</div>
+                    <small>alertas</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-warning text-center">
+                <div class="card-body">
+                    <h6>Tendencia</h6>
+                    <div class="display-6 fw-bold" id="tendencia">-</div>
+                    <small>vs período anterior</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-primary text-center">
+                <div class="card-body">
+                    <h6>Ahorro Potencial</h6>
+                    <div class="display-6 fw-bold" id="ahorro-potencial">0%</div>
+                    <small>estimado</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-table"></i> Detalle</h5>
+            <span class="badge bg-secondary" id="total-registros">0 registros</span>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped" id="tabla-detalle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Período</th>
+                            <th>Agua (m³)</th>
+                            <th>Electricidad (kWh)</th>
+                            <th>Gas (m³)</th>
+                            <th>Total</th>
+                            <th>Variación</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="7" class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status"></div>
+                                <p class="mt-2">Cargando datos...</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+// Datos de ejemplo (en producción vendrán de Flask)
+const historicoData = {
+    periodos: ['Ene 2024','Dic 2023','Nov 2023','Oct 2023'],
+    agua: [15.5,14.2,13.8,12.5],
+    electricidad: [320,295,280,265],
+    gas: [8.2,7.8,7.5,7.0],
+    alertas: [true,false,false,false]
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    inicializarGraficos();
+    actualizarTabla();
+    actualizarMetricas();
+});
+
+// Inicializar gráficos
+function inicializarGraficos() {
+    const ctxBarras = document.getElementById('grafico-barras');
+    new Chart(ctxBarras, {
+        type: 'bar',
+        data: {
+            labels: historicoData.periodos,
+            datasets: [
+                {label:'Agua (m³)', data: historicoData.agua, backgroundColor:'rgba(54,162,235,0.8)'},
+                {label:'Electricidad (kWh)', data: historicoData.electricidad, backgroundColor:'rgba(255,206,86,0.8)'},
+                {label:'Gas (m³)', data: historicoData.gas, backgroundColor:'rgba(75,192,192,0.8)'}
+            ]
+        }
+    });
+
+    const ctxTorta = document.getElementById('grafico-torta');
+    new Chart(ctxTorta, {
+        type: 'pie',
+        data: {
+            labels:['Agua','Electricidad','Gas'],
+            datasets:[{data:[
+                historicoData.agua.reduce((a,b)=>a+b,0),
+                historicoData.electricidad.reduce((a,b)=>a+b,0),
+                historicoData.gas.reduce((a,b)=>a+b,0)
+            ], backgroundColor:['#0d6efd','#ffc107','#198754']}]
+        }
+    });
+
+    const ctxLineas = document.getElementById('grafico-lineas');
+    new Chart(ctxLineas, {
+        type: 'line',
+        data: {
+            labels: historicoData.periodos,
+            datasets: [
+                {label:'Agua (m³)', data: historicoData.agua, borderColor:'#0d6efd', tension:0.4},
+                {label:'Electricidad (kWh)', data: historicoData.electricidad, borderColor:'#ffc107', tension:0.4},
+                {label:'Gas (m³)', data: historicoData.gas, borderColor:'#198754', tension:0.4}
+            ]
+        }
+    });
+}
+
+// Actualizar tabla
+function actualizarTabla() {
+    const body = document.querySelector('#tabla-detalle tbody');
+    body.innerHTML = '';
+    historicoData.periodos.forEach((p,i) => {
+        const total = historicoData.agua[i]+historicoData.electricidad[i]+historicoData.gas[i];
+        const variacion = i>0 ? (((total/(historicoData.agua[i-1]+historicoData.electricidad[i-1]+historicoData.gas[i-1]))-1)*100).toFixed(1):0;
+        const estado = historicoData.alertas[i] ? '<span class="badge bg-danger">Alto</span>' : '<span class="badge bg-success">Normal</span>';
+        body.innerHTML += `
+            <tr>
+                <td>${p}</td>
+                <td>${historicoData.agua[i]}</td>
+                <td>${historicoData.electricidad[i]}</td>
+                <td>${historicoData.gas[i]}</td>
+                <td><strong>${total.toFixed(1)}</strong></td>
+                <td class="${variacion>0?'text-danger':'text-success'}">
+                    <i class="bi ${variacion>0?'bi-arrow-up':'bi-arrow-down'}"></i>
+                    ${Math.abs(variacion)}%
+                </td>
+                <td>${estado}</td>
+            </tr>
+        `;
+    });
+    document.getElementById('total-registros').textContent = historicoData.periodos.length+' registros';
+}
+
+// Actualizar métricas
+function actualizarMetricas() {
+    const total = historicoData.agua.reduce((a,b)=>a+b,0)+
+                  historicoData.electricidad.reduce((a,b)=>a+b,0)+
+                  historicoData.gas.reduce((a,b)=>a+b,0);
+    const promedio = total/historicoData.periodos.length;
+    document.getElementById('consumo-promedio').textContent = promedio.toFixed(1);
+    document.getElementById('meses-altos').textContent = historicoData.alertas.filter(a=>a).length;
+    const ultimo = historicoData.agua[0]+historicoData.electricidad[0]+historicoData.gas[0];
+    const anterior = historicoData.agua[1]+historicoData.electricidad[1]+historicoData.gas[1];
+    const tendencia = ((ultimo/anterior-1)*100).toFixed(1);
+    const tendenciaEl = document.getElementById('tendencia');
+    tendenciaEl.textContent = tendencia+'%';
+    tendenciaEl.className = 'display-6 fw-bold '+(tendencia>0?'text-danger':'text-success');
+    document.getElementById('ahorro-potencial').textContent = (10+Math.random()*10).toFixed(0)+'%';
+}
+
+// Exportar
+document.getElementById('btn-exportar').addEventListener('click', () => {
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(historicoData.periodos.map((p,i)=>({
+        'Período':p,
+        'Agua (m³)':historicoData.agua[i],
+        'Electricidad (kWh)':historicoData.electricidad[i],
+        'Gas (m³)':historicoData.gas[i]
+    })));
+    XLSX.utils.book_append_sheet(wb, ws, 'Consumo');
+    XLSX.writeFile(wb, 'historico_consumo_neotower.xlsx');
+});
+</script>
+{% endblock %}

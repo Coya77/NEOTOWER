@@ -1,0 +1,308 @@
+<!-- templates/administrador/gestion_quejas.html -->
+{% extends "base.html" %}
+{% block title %}Gestión de Quejas - NEOTOWER{% endblock %}
+
+{% block content %}
+<style>
+:root {
+  --primary-blue: #2563eb;
+  --mint-green: #10b981;
+  --dark-black: #1f2937;
+  --light-mint: #d1fae5;
+  --gradient-bg: linear-gradient(135deg, var(--primary-blue) 0%, var(--mint-green) 100%);
+}
+
+body {
+  background: linear-gradient(135deg, #eef7ff 0%, #fafff8 100%);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+h2 {
+  color: var(--dark-black);
+  font-weight: 700;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.card-custom {
+  background: rgba(255,255,255,0.95);
+  border: none;
+  border-radius: 20px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+
+.card-header-custom {
+  background: var(--gradient-bg);
+  color: white;
+  padding: 25px;
+  border-radius: 20px 20px 0 0;
+}
+
+.btn-primary {
+  background: var(--gradient-bg);
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  color: white;
+  transition: all 0.3s ease;
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+}
+
+.btn-outline-light {
+  border: 2px solid white;
+  color: white;
+  font-weight: 500;
+  border-radius: 10px;
+}
+.btn-outline-light:hover {
+  background: white;
+  color: var(--primary-blue);
+}
+
+.table-custom {
+  border-radius: 12px;
+  overflow: hidden;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+.table thead {
+  background: var(--gradient-bg);
+  color: white;
+}
+.table tbody tr:hover {
+  background-color: #f1f5f9;
+}
+
+select.form-select {
+  border-radius: 10px;
+  border: 2px solid #e5e7eb;
+  transition: all 0.3s ease;
+}
+select.form-select:focus {
+  border-color: var(--mint-green);
+  box-shadow: 0 0 0 3px rgba(16,185,129,0.1);
+}
+
+.badge {
+  border-radius: 8px;
+  font-size: 0.8rem;
+  padding: 0.4em 0.6em;
+}
+
+.badge-estado-pendiente { background-color: var(--primary-blue); color: white; }
+.badge-estado-en_proceso { background-color: #facc15; color: black; }
+.badge-estado-respondida { background-color: #22c55e; color: white; }
+.badge-estado-resuelta { background-color: #6b7280; color: white; }
+
+.badge-prioridad-urgente { background-color: #dc2626; color: white; }
+.badge-prioridad-alta { background-color: #f97316; color: white; }
+.badge-prioridad-media { background-color: var(--primary-blue); color: white; }
+.badge-prioridad-baja { background-color: #9ca3af; color: white; }
+
+.badge-tipo-sugerencia { background-color: #06b6d4; color: white; }
+.badge-tipo-queja { background-color: #facc15; color: black; }
+.badge-tipo-reclamo { background-color: #ef4444; color: white; }
+.badge-tipo-felicitacion { background-color: #22c55e; color: white; }
+
+.modal-content {
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+.descripcion-truncada {
+  max-width: 240px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+</style>
+
+<div class="container py-4">
+  <div class="card-custom">
+    <div class="card-header-custom d-flex justify-content-between align-items-center flex-wrap">
+      <h2 class="mb-0"><i class="bi bi-inbox me-2"></i>Gestión de Quejas y Sugerencias</h2>
+      <a href="{{ url_for('dashboard') }}" class="btn btn-outline-light mt-3 mt-md-0">
+        <i class="bi bi-house me-1"></i>Volver al Dashboard
+      </a>
+    </div>
+
+    <div class="card-body p-4">
+      <!-- Flash messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <!-- Filtros -->
+      <div class="row mb-4 align-items-end">
+        <div class="col-md-4 mb-3">
+          <label for="filtro_estado" class="form-label fw-bold">Filtrar por Estado:</label>
+          <form method="GET" action="{{ url_for('buzon.gestion_quejas') }}">
+            <select name="estado" id="filtro_estado" class="form-select" onchange="this.form.submit()">
+              <option value="todos" {% if filtro_estado_actual == 'todos' %}selected{% endif %}>Todos</option>
+              <option value="pendiente" {% if filtro_estado_actual == 'pendiente' %}selected{% endif %}>Pendiente</option>
+              <option value="en_proceso" {% if filtro_estado_actual == 'en_proceso' %}selected{% endif %}>En Proceso</option>
+              <option value="respondida" {% if filtro_estado_actual == 'respondida' %}selected{% endif %}>Respondida</option>
+              <option value="resuelta" {% if filtro_estado_actual == 'resuelta' %}selected{% endif %}>Resuelta</option>
+            </select>
+          </form>
+        </div>
+        <div class="col-md-4 mb-3">
+          <label for="filtro_tipo" class="form-label fw-bold">Filtrar por Tipo:</label>
+          <form method="GET" action="{{ url_for('buzon.gestion_quejas') }}">
+            <input type="hidden" name="estado" value="{{ filtro_estado_actual }}">
+            <select name="tipo" id="filtro_tipo" class="form-select" onchange="this.form.submit()">
+              <option value="todos" {% if filtro_tipo_actual == 'todos' %}selected{% endif %}>Todos</option>
+              <option value="sugerencia" {% if filtro_tipo_actual == 'sugerencia' %}selected{% endif %}>Sugerencia</option>
+              <option value="queja" {% if filtro_tipo_actual == 'queja' %}selected{% endif %}>Queja</option>
+              <option value="reclamo" {% if filtro_tipo_actual == 'reclamo' %}selected{% endif %}>Reclamo</option>
+              <option value="felicitacion" {% if filtro_tipo_actual == 'felicitacion' %}selected{% endif %}>Felicitación</option>
+            </select>
+          </form>
+        </div>
+        <div class="col-md-4 text-end mb-3">
+          <span class="text-muted fw-semibold">Total: {{ quejas|length }} quejas</span>
+        </div>
+      </div>
+
+      {% if quejas %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle table-custom">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Tipo</th>
+              <th>Prioridad</th>
+              <th>Asunto</th>
+              <th>Descripción</th>
+              <th>Usuario</th>
+              <th>Estado</th>
+              <th>Fecha</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for queja in quejas %}
+            <tr>
+              <td><strong>{{ queja.id_queja }}</strong></td>
+              <td>
+                <span class="badge 
+                  {% if queja.tipo == 'sugerencia' %}badge-tipo-sugerencia
+                  {% elif queja.tipo == 'queja' %}badge-tipo-queja
+                  {% elif queja.tipo == 'reclamo' %}badge-tipo-reclamo
+                  {% else %}badge-tipo-felicitacion{% endif %}">
+                  {{ queja.tipo|title }}
+                </span>
+              </td>
+              <td>
+                <span class="badge 
+                  {% if queja.prioridad == 'urgente' %}badge-prioridad-urgente
+                  {% elif queja.prioridad == 'alta' %}badge-prioridad-alta
+                  {% elif queja.prioridad == 'media' %}badge-prioridad-media
+                  {% else %}badge-prioridad-baja{% endif %}">
+                  {{ queja.prioridad|title }}
+                </span>
+              </td>
+              <td>{{ queja.asunto or 'Sin asunto' }}</td>
+              <td class="descripcion-truncada">{{ (queja.descripcion or 'Sin descripción')[:150] }}{% if queja.descripcion|length > 150 %}...{% endif %}</td>
+              <td>
+                {% if queja.anonimo %}
+                  <span class="badge bg-secondary">Anónimo</span>
+                {% else %}
+                  {{ queja.nombre_usuario or 'Usuario desconocido' }}
+                {% endif %}
+              </td>
+              <td>
+                <span class="badge 
+                  {% if queja.estado == 'pendiente' %}badge-estado-pendiente
+                  {% elif queja.estado == 'en_proceso' %}badge-estado-en_proceso
+                  {% elif queja.estado == 'respondida' %}badge-estado-respondida
+                  {% else %}badge-estado-resuelta{% endif %}">
+                  {{ queja.estado|replace('_',' ')|title }}
+                </span>
+              </td>
+              <td>{{ queja.fecha_creacion.strftime('%d/%m/%Y %H:%M') if queja.fecha_creacion else 'N/A' }}</td>
+              <td>
+                <div class="btn-group btn-group-sm">
+                  <a href="{{ url_for('buzon.detalle_queja', id_queja=queja.id_queja) }}" class="btn btn-outline-primary" title="Ver Detalle">
+                    <i class="bi bi-eye"></i>
+                  </a>
+                  {% if queja.estado in ['pendiente', 'en_proceso'] %}
+                  <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" 
+                          data-bs-target="#modalResponder{{ queja.id_queja }}" title="Responder">
+                    <i class="bi bi-reply"></i>
+                  </button>
+                  {% endif %}
+                  <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" 
+                          data-bs-target="#modalEliminar{{ queja.id_queja }}" title="Eliminar">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Modal responder -->
+            <div class="modal fade" id="modalResponder{{ queja.id_queja }}" tabindex="-1">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title">Responder Queja #{{ queja.id_queja }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                  </div>
+                  <form method="POST" action="{{ url_for('buzon.responder_queja', id_queja=queja.id_queja) }}">
+                    <div class="modal-body">
+                      <textarea class="form-control" name="respuesta" rows="4" placeholder="Escribe tu respuesta..." required></textarea>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                      <button type="submit" class="btn btn-success">Enviar Respuesta</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            <!-- Modal eliminar -->
+            <div class="modal fade" id="modalEliminar{{ queja.id_queja }}" tabindex="-1">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title">Eliminar Queja #{{ queja.id_queja }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                  </div>
+                  <div class="modal-body">
+                    <p>¿Estás seguro de eliminar esta queja? Esta acción no se puede deshacer.</p>
+                  </div>
+                  <form method="POST" action="{{ url_for('buzon.eliminar_queja', id_queja=queja.id_queja) }}">
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                      <button type="submit" class="btn btn-danger">Eliminar</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center py-5">
+        <i class="bi bi-inbox display-1 text-muted mb-3"></i>
+        <h4 class="text-muted mb-3">No hay quejas registradas</h4>
+        <p class="text-muted">Aún no se han enviado mensajes. Los residentes pueden enviarlos desde su buzón.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

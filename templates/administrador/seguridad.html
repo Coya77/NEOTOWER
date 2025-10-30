@@ -1,0 +1,155 @@
+<!-- templates/administrador/seguridad.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-shield-check me-2"></i>Panel de Seguridad</h2>
+</div>
+
+<!-- Estadísticas -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <h5>Intentos (24h)</h5>
+                <h3>{{ stats.total_intentos or 0 }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body text-center">
+                <h5>IPs Bloqueadas</h5>
+                <h3>{{ stats.ips_bloqueadas or 0 }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <h5>IPs Sospechosas</h5>
+                <h3>{{ stats.ips_sospechosas or 0 }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <h5>Configuración</h5>
+                <small>Límite: {{ max_intentos }} intentos<br>Bloqueo: {{ tiempo_bloqueo }} min</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- IPs Bloqueadas -->
+<div class="card mb-4">
+    <div class="card-header bg-danger text-white">
+        <h5 class="mb-0"><i class="bi bi-shield-lock me-2"></i>IPs Bloqueadas Actualmente</h5>
+    </div>
+    <div class="card-body">
+        {% if ips_bloqueadas %}
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>IP Address</th>
+                        <th>Usuario</th>
+                        <th>Intentos</th>
+                        <th>Último Intento</th>
+                        <th>Desbloqueo Automático</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ip in ips_bloqueadas %}
+                    <tr>
+                        <td><code>{{ ip.ip_address }}</code></td>
+                        <td>{{ ip.username or 'N/A' }}</td>
+                        <td><span class="badge bg-danger">{{ ip.intentos_fallidos }}</span></td>
+                        <td>{{ ip.ultimo_intento.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td>
+                            {% if ip.fecha_desbloqueo %}
+                            {{ ip.fecha_desbloqueo.strftime('%d/%m/%Y %H:%M') }}
+                            {% else %}
+                            <span class="text-muted">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('desbloquear_ip', ip=ip.ip_address) }}" 
+                               class="btn btn-sm btn-outline-success"
+                               onclick="return confirm('¿Desbloquear esta IP?')">
+                                <i class="bi bi-unlock"></i> Desbloquear
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-3">
+            <i class="bi bi-check-circle display-4 text-success"></i>
+            <p class="mt-2 text-muted">No hay IPs bloqueadas actualmente</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Logs de Seguridad -->
+<div class="card">
+    <div class="card-header bg-dark text-white">
+        <h5 class="mb-0"><i class="bi bi-list-check me-2"></i>Últimos Eventos de Seguridad</h5>
+    </div>
+    <div class="card-body">
+        {% if logs %}
+        <div class="table-responsive">
+            <table class="table table-sm table-striped">
+                <thead>
+                    <tr>
+                        <th>Fecha/Hora</th>
+                        <th>IP</th>
+                        <th>Usuario</th>
+                        <th>Evento</th>
+                        <th>Descripción</th>
+                        <th>Severidad</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td>{{ log.fecha_evento.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td><code>{{ log.ip_address }}</code></td>
+                        <td>{{ log.usuario or 'N/A' }}</td>
+                        <td>
+                            <span class="badge 
+                                {% if log.evento == 'login_exitoso' %}bg-success
+                                {% elif log.evento == 'intento_fallido' %}bg-warning
+                                {% elif 'bloqueo' in log.evento %}bg-danger
+                                {% else %}bg-info{% endif %}">
+                                {{ log.evento }}
+                            </span>
+                        </td>
+                        <td>{{ log.descripcion }}</td>
+                        <td>
+                            <span class="badge 
+                                {% if log.nivel_severidad == 'alto' %}bg-danger
+                                {% elif log.nivel_severidad == 'medio' %}bg-warning
+                                {% else %}bg-info{% endif %}">
+                                {{ log.nivel_severidad }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-3">
+            <i class="bi bi-info-circle display-4 text-muted"></i>
+            <p class="mt-2 text-muted">No hay eventos de seguridad registrados</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

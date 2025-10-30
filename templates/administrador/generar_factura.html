@@ -1,0 +1,79 @@
+<!-- templates/administrador/generar_factura.html -->
+{% extends "base.html" %}
+
+{% block title %}Generar Factura{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4"><i class="bi bi-file-earmark-plus me-2"></i>Generar Nueva Factura</h2>
+
+  <form action="{{ url_for('guardar_factura') }}" method="POST" class="needs-validation" novalidate>
+    <!-- Residente -->
+    <div class="mb-3">
+      <label for="residente" class="form-label">Residente</label>
+      <select class="form-select" id="residente" name="residente" required>
+        <option value="">Seleccione un residente</option>
+        {% for r in residentes %}
+        <option value="{{ r.id_residente }}">
+          {{ r.nombre }} {{ r.apellido }}
+        </option>
+        {% endfor %}
+      </select>
+      <div class="invalid-feedback">Debe seleccionar un residente.</div>
+    </div>
+
+    <!-- Fecha -->
+    <div class="mb-3">
+      <label for="fecha" class="form-label">Fecha</label>
+      <input type="date" class="form-control" id="fecha" name="fecha" required>
+      <div class="invalid-feedback">Debe ingresar la fecha de la factura.</div>
+    </div>
+
+    <!-- Monto -->
+    <div class="mb-3">
+      <label for="monto" class="form-label">Monto (Bs.)</label>
+      <input type="number" class="form-control" id="monto" name="monto" step="0.01" min="0" required>
+      <div class="invalid-feedback">Debe ingresar un monto válido.</div>
+    </div>
+
+    <!-- Estado -->
+    <div class="mb-3">
+      <label for="estado" class="form-label">Estado</label>
+      <select class="form-select" id="estado" name="estado" required>
+        <option value="">Seleccione estado</option>
+        <option value="Pendiente">Pendiente</option>
+        <option value="Pagada">Pagada</option>
+      </select>
+      <div class="invalid-feedback">Debe seleccionar un estado.</div>
+    </div>
+
+    <!-- Botones -->
+    <div class="d-flex justify-content-between">
+      <a href="{{ url_for('facturas') }}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Cancelar
+      </a>
+      <button type="submit" class="btn btn-success">
+        <i class="bi bi-save"></i> Guardar Factura
+      </button>
+    </div>
+  </form>
+</div>
+
+{% block scripts %}
+<script>
+(() => {
+  'use strict'
+  const forms = document.querySelectorAll('.needs-validation')
+  Array.from(forms).forEach(form => {
+    form.addEventListener('submit', event => {
+      if (!form.checkValidity()) {
+        event.preventDefault()
+        event.stopPropagation()
+      }
+      form.classList.add('was-validated')
+    }, false)
+  })
+})()
+</script>
+{% endblock %}
+{% endblock %}

@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+{% block title %}Gestión de Pagos{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+  <!-- 🔹 Encabezado -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="text-primary mb-0">
+      <i class="bi bi-people-fill"></i> Pagos por Residente
+    </h4>
+    <div class="d-flex">
+      <a href="{{ url_for('historial_pagos') }}" class="btn btn-outline-secondary me-2">
+        <i class="bi bi-clock-history"></i> Ver Historial de Pagos
+      </a>
+      
+    </div>
+  </div>
+
+  <!-- 🔹 Tabla de residentes -->
+  {% if residentes %}
+  <table class="table table-striped align-middle text-center shadow-sm">
+    <thead class="table-primary">
+      <tr>
+        <th>Residente</th>
+        <th>Departamento</th>
+        <th>Último pago</th>
+        <th>Estado</th>
+        <th>Acción</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in residentes %}
+      <tr>
+        <td>{{ r.nombre }}</td>
+        <td>{{ r.departamento }}</td>
+        <td>{{ r.ultimo_pago }}</td>
+        <td>
+          {% if r.estado == 'Pendiente' %}
+            <span class="badge bg-warning text-dark">Pendiente</span>
+          {% elif r.estado == 'Pagado' %}
+            <span class="badge bg-success">Pagado</span>
+          {% else %}
+            <span class="badge bg-secondary">Sin pagos</span>
+          {% endif %}
+        </td>
+        <td>
+          <button class="btn btn-success btn-sm" 
+                  data-bs-toggle="modal" 
+                  data-bs-target="#modalAsignarPago"
+                  data-id="{{ r.id_usuario }}"
+                  data-nombre="{{ r.nombre }}">
+            <i class="bi bi-cash"></i> Asignar monto
+          </button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="alert alert-info text-center">
+    No hay residentes registrados.
+  </div>
+  {% endif %}
+
+  <!-- ===================================== -->
+  <!-- 🔹 Bloque de morosidad -->
+  <!-- ===================================== -->
+  <div class="mt-5">
+    <h5 class="text-danger mb-3">
+      <i class="bi bi-exclamation-triangle"></i> Control de Morosidad
+    </h5>
+
+    {% if morosos %}
+    <div class="alert alert-danger text-center shadow-sm">
+      <i class="bi bi-people"></i>
+      <strong>{{ total_morosos }}</strong> residentes en mora |
+      Deuda total:
+      <strong>{{ "%.2f"|format(total_deuda or 0) }} Bs</strong>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover text-center align-middle">
+        <thead class="table-danger">
+          <tr>
+            <th>Residente</th>
+            <th>Pagos Morosos</th>
+            <th>Deuda Total (Bs)</th>
+            <th>Días Máx. Retraso</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in morosos %}
+          <tr>
+            <td>{{ m.residente }}</td>
+            <td>{{ m.total_morosidades }}</td>
+            <td>{{ "%.2f"|format(m.deuda_total or 0) }}</td>
+            <td>{{ m.max_dias_retraso }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="alert alert-success text-center">
+      🎉 No hay residentes morosos actualmente.
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ===================================== -->
+  <!-- 🔹 Modal: Asignar pago -->
+  <!-- ===================================== -->
+  <div class="modal fade" id="modalAsignarPago" tabindex="-1" aria-labelledby="modalAsignarPagoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <form method="POST" action="{{ url_for('asignar_pago') }}">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title" id="modalAsignarPagoLabel">Asignar pago a residente</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Residente</label>
+              <input type="text" class="form-control" id="nombre_residente" readonly>
+              <input type="hidden" id="id_usuario" name="id_usuario">
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Electricidad (Bs)</label>
+                <input type="number" step="0.01" name="electricidad" class="form-control" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Agua (Bs)</label>
+                <input type="number" step="0.01" name="agua" class="form-control" required>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Gas (Bs)</label>
+                <input type="number" step="0.01" name="gas" class="form-control" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Mantenimiento (Bs)</label>
+                <input type="number" step="0.01" name="mantenimiento" class="form-control" value="150.00" readonly>
+              </div>
+
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Periodo</label>
+              <input type="text" class="form-control" id="periodo" name="periodo" placeholder="Ej: Octubre 2025">
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-success">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================== -->
+  <!-- 🔹 Modal: Nuevo pago manual -->
+  <!-- ===================================== -->
+  <div class="modal fade" id="modalNuevo" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form method="POST" action="{{ url_for('nuevo_pago') }}">
+          <div class="modal-header bg-dark text-white">
+            <h5 class="modal-title">Registrar Pago Manual</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Monto (Bs.)</label>
+              <input type="number" step="0.01" name="monto" class="form-control" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Tipo</label>
+              <input type="text" name="tipo" class="form-control" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Estado</label>
+              <select name="estado" class="form-select" required>
+                <option value="Pagado">Pagado</option>
+                <option value="Pendiente">Pendiente</option>
+                <option value="Cancelado">Cancelado</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Fecha</label>
+              <input type="date" name="fecha" class="form-control" required>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 🔹 Script para llenar datos del modal -->
+<script>
+  const modalAsignar = document.getElementById('modalAsignarPago');
+  modalAsignar.addEventListener('show.bs.modal', event => {
+    const button = event.relatedTarget;
+    const id = button.getAttribute('data-id');
+    const nombre = button.getAttribute('data-nombre');
+    document.getElementById('id_usuario').value = id;
+    document.getElementById('nombre_residente').value = nombre;
+  });
+</script>
+
+{% endblock %}

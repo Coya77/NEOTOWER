@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+{% block title %}Panel de Administración{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div class="d-flex align-items-center">
+    <h2 class="me-3"><i class="bi bi-speedometer2 me-2"></i>Panel de Administración</h2>
+
+    <!-- Atajos -->
+    <a href="{{ url_for('dashboardpagos') }}" class="btn btn-outline-info me-2">
+      <i class="bi bi-credit-card"></i> Dashboard de Pagos
+    </a>
+    <a href="{{ url_for('dashboardconsumo') }}" class="btn btn-outline-success">
+      <i class="bi bi-lightning-charge"></i> Dashboard de Consumo
+    </a>
+  </div>
+  <span class="badge bg-danger">Administrador</span>
+</div>
+
+<!-- 🔹 Mensajes Flash -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="mb-3">
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+<!-- 🔹 Estadísticas Generales -->
+<div class="row">
+  {% set tarjetas = [
+    {'color': 'primary', 'icon': 'bi-people-fill', 'titulo': 'Usuarios', 'valor': stats.total_usuarios if stats else 0, 'desc': 'Gestión de usuarios'},
+    {'color': 'success', 'icon': 'bi-building', 'titulo': 'Departamentos', 'valor': stats.total_departamentos if stats else 0, 'desc': 'Gestión de propiedades'},
+    {'color': 'warning', 'icon': 'bi-clipboard-check', 'titulo': 'Incidentes', 'valor': stats.incidentes_activos if stats else 0, 'desc': 'Incidentes activos'},
+    {'color': 'info', 'icon': 'bi-credit-card', 'titulo': 'Pagos Pendientes', 'valor': stats.pagos_pendientes if stats else 0, 'desc': 'Pagos por confirmar'}
+  ] %}
+  {% for t in tarjetas %}
+  <div class="col-md-3 mb-4">
+    <div class="card text-white bg-{{ t.color }} shadow">
+      <div class="card-body text-center">
+        <h5 class="card-title"><i class="bi {{ t.icon }}"></i> {{ t.titulo }}</h5>
+        <p class="display-6">{{ t.valor }}</p>
+        <small>{{ t.desc }}</small>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- 🔹 Acciones Rápidas y Actividad -->
+<div class="row mt-4">
+  <div class="col-md-6">
+    <div class="card shadow">
+      <div class="card-header bg-light">
+        <h5><i class="bi bi-lightning"></i> Acciones Rápidas</h5>
+      </div>
+      <div class="card-body">
+        <div class="d-grid gap-2">
+          <a href="{{ url_for('gestion_residentes') }}" class="btn btn-outline-primary">
+            <i class="bi bi-people"></i> Gestionar Residentes
+          </a>
+          <a href="{{ url_for('gestion_departamentos') }}" class="btn btn-outline-success">
+            <i class="bi bi-building-add"></i> Gestionar Departamentos
+          </a>
+          <a href="{{ url_for('votaciones.admin_gestion_encuestas') }}" class="btn btn-outline-warning">
+            <i class="bi bi-bar-chart-line"></i> Encuestas
+          </a>
+          <a href="{{ url_for('reportes_auditoria') }}" class="btn btn-outline-info">
+            <i class="bi bi-graph-up"></i> Reportes y Auditoría
+          </a>
+          <a href="{{ url_for('configuraciones') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-gear"></i> Configuración del Sistema
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card shadow">
+      <div class="card-header bg-light">
+        <h5><i class="bi bi-clock-history"></i> Actividad Reciente</h5>
+      </div>
+      <div class="card-body">
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item">
+            Panel de administración activo <span class="float-end text-muted">Ahora</span>
+          </li>
+          <li class="list-group-item">
+            Sistema NEOTOWER configurado <span class="float-end text-muted">Hoy</span>
+          </li>
+          <li class="list-group-item">
+            Sesión de administrador iniciada <span class="float-end text-muted">Inicio</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 🔹 Información del sistema -->
+<div class="row mt-4">
+  <div class="col-12">
+    <div class="card shadow">
+      <div class="card-header bg-light">
+        <h5><i class="bi bi-info-circle"></i> Información del Sistema</h5>
+      </div>
+      <div class="card-body row">
+        <div class="col-md-6">
+          <p><strong>Usuario:</strong> {{ session.get('user_nombre') }}</p>
+          <p><strong>Rol:</strong> {{ session.get('user_rol') }}</p>
+          <p><strong>ID de sesión:</strong> {{ session.get('user_id') }}</p>
+        </div>
+        <div class="col-md-6">
+          <p><strong>Base de datos:</strong> NEOTOWER</p>
+          <p><strong>Usuarios registrados:</strong> {{ stats.total_usuarios if stats else 0 }}</p>
+          <p><strong>Estado:</strong> <span class="badge bg-success">Conectado</span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================================================== -->
+<!-- 🧮 DASHBOARD FINANCIERO DINÁMICO -->
+<!-- ===================================================== -->
+<div class="card mt-5 shadow-lg border-0">
+  <div class="card-header bg-primary text-white">
+    <h5 class="mb-0"><i class="bi bi-cash-coin me-2"></i> Dashboard Financiero</h5>
+  </div>
+  <div class="card-body">
+    <!-- Totales -->
+    <div class="row text-center mb-4">
+      <div class="col-md-4">
+        <div class="alert alert-success shadow-sm">
+          <strong>Ingresos del mes:</strong><br>{{ "%.2f"|format(resumen.ingresos_mes or 0) }} Bs
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="alert alert-danger shadow-sm">
+          <strong>Egresos del mes:</strong><br>{{ "%.2f"|format(resumen.egresos_mes or 0) }} Bs
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="alert alert-info shadow-sm">
+          <strong>Saldo del mes:</strong><br>{{ "%.2f"|format(resumen.saldo_mes or 0) }} Bs
+        </div>
+      </div>
+    </div>
+
+    <!-- Gráfico dinámico -->
+    <canvas id="graficoFinanciero" height="100"></canvas>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const ctx = document.getElementById("graficoFinanciero");
+  const labels = {{ labels|tojson }};
+  const dataset = {{ saldos|tojson }};
+
+  if (!ctx) return;
+  if (!labels.length || dataset.length < 1) {
+    ctx.parentElement.innerHTML += `
+      <div class="alert alert-warning text-center mt-3">
+        ⚠️ No hay datos financieros suficientes para mostrar el gráfico.
+      </div>`;
+    return;
+  }
+
+  const ingresos = dataset.map(d => d.ingreso);
+  const egresos = dataset.map(d => d.egreso);
+  const saldos = dataset.map(d => d.saldo);
+
+  new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: labels,
+      datasets: [
+        { label: "Ingresos (Bs.)", data: ingresos, borderColor: "#198754", backgroundColor: "rgba(25,135,84,0.15)", borderWidth: 2, fill: true },
+        { label: "Egresos (Bs.)", data: egresos, borderColor: "#dc3545", backgroundColor: "rgba(220,53,69,0.15)", borderWidth: 2, fill: true },
+        { label: "Saldo (Bs.)", data: saldos, borderColor: "#0d6efd", backgroundColor: "rgba(13,110,253,0.15)", borderWidth: 3, fill: false, pointRadius: 6, pointBackgroundColor: "#0d6efd" }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: "top" } },
+      scales: {
+        y: { beginAtZero: true, title: { display: true, text: "Monto (Bs.)" } },
+        x: { title: { display: true, text: "Mes" } }
+      }
+    }
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Enviar Correo Masivo - NEOTOWER{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --color-azul: #0e648b;
+        --color-verde: #209278;
+    }
+
+    body {
+        background: linear-gradient(135deg, #0e648b 0%, #209278 100%);
+        min-height: 100vh;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .container-custom {
+        min-height: 100vh;
+        padding: 20px;
+    }
+
+    .card-custom {
+        background: rgba(255, 255, 255, 0.95);
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+
+    .card-header-custom {
+        background: linear-gradient(135deg, var(--color-azul) 0%, var(--color-verde) 100%);
+        color: white;
+        border-radius: 15px 15px 0 0 !important;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, var(--color-azul) 0%, var(--color-verde) 100%);
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+    }
+
+    .form-control:focus {
+        border-color: var(--color-verde);
+        box-shadow: 0 0 0 0.2rem rgba(32, 146, 120, 0.25);
+    }
+</style>
+
+<div class="container-custom">
+    <div class="card-custom">
+        <div class="card-header-custom p-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="mb-0"><i class="bi bi-envelope me-2"></i>Enviar Correo Masivo</h2>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-light">
+                    <i class="bi bi-house me-1"></i>Volver al Dashboard
+                </a>
+            </div>
+            <p class="mb-0 opacity-75 mt-2">Envía notificaciones a residentes o todos los usuarios.</p>
+        </div>
+
+        <div class="card-body p-4">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST">
+                <div class="mb-3">
+                    <label for="destinatarios" class="form-label fw-bold">Destinatarios:</label>
+                    <select name="destinatarios" id="destinatarios" class="form-select">
+                        <option value="residentes">Solo Residentes</option>
+                        <option value="todos">Todos los Usuarios (incl. Admins)</option>
+                    </select>
+                    <div class="form-text">Se enviará a todos los emails registrados en la base de datos.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="asunto" class="form-label fw-bold">Asunto:</label>
+                    <input type="text" class="form-control" name="asunto" id="asunto" 
+                           placeholder="Ej: Nuevo anuncio en NEOTOWER" maxlength="100" required>
+                    <div class="form-text">Máx. 100 caracteres.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="cuerpo" class="form-label fw-bold">Cuerpo del Mensaje:</label>
+                    <textarea class="form-control" name="cuerpo" id="cuerpo" rows="8" 
+                              placeholder="Escribe el mensaje aquí... (se convertirá a HTML)" 
+                              maxlength="5000" required></textarea>
+                    <div class="form-text">Máx. 5000 caracteres. Usa saltos de línea para párrafos.</div>
+                </div>
+
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-send me-1"></i>Enviar Masivo
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

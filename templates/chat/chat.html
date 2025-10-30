@@ -1,0 +1,445 @@
+{% extends "base.html" %}
+
+{% block title %}Chat Comunitario - NEOTOWER{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-users"></i> Chat Comunitario
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="estadisticas-chat">
+                        <div class="text-center">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    <div class="debug-info small">
+                        <strong>Debug Info:</strong>
+                        <div id="debug-status">Cargando...</div>
+                    </div>
+                    <hr>
+                    
+                    <div class="mt-3">
+                        <h6>Normas del chat:</h6>
+                        <ul class="small">
+                            <li>Respeta a todos los residentes</li>
+                            <li>No compartas información personal</li>
+                            <li>Mantén un lenguaje apropiado</li>
+                            <li>No spam ni publicidad</li>
+                        </ul>
+                    </div>
+                    
+                    {% if session.user_rol == 'administrador' %}
+                    <hr>
+                    <a href="{{ url_for('gestion_chat') }}" class="btn btn-warning btn-sm">
+                        <i class="fas fa-cog"></i> Moderar Chat
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-comments"></i> Conversación Comunitaria
+                    </h5>
+                    <div>
+                        <span class="badge bg-primary" id="contador-mensajes">0 mensajes</span>
+                        <button class="btn btn-sm btn-outline-secondary ms-2" onclick="debugChat()">
+                            <i class="fas fa-bug"></i> Debug
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="card-body chat-messages" id="chat-messages" 
+                     style="height: 500px; overflow-y: auto; background: #f8f9fa;">
+                    <div id="cargando-mensajes" class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando mensajes...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Cargando conversación...</p>
+                    </div>
+                </div>
+                
+                <div class="card-footer">
+                    <form id="form-mensaje" class="d-flex gap-2">
+                        <input type="text" 
+                               id="input-mensaje" 
+                               class="form-control" 
+                               placeholder="Escribe tu mensaje..." 
+                               maxlength="500"
+                               required>
+                        <button type="submit" class="btn btn-primary" id="btn-enviar">
+                            <i class="fas fa-paper-plane"></i> Enviar
+                        </button>
+                    </form>
+                    <div class="mt-2">
+                        <small class="text-muted" id="contador-caracteres">0/500 caracteres</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Variables globales
+let intervaloActualizacion;
+
+// Inicializar chat cuando el documento esté listo
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Inicializando chat...');
+    inicializarChat();
+});
+
+function inicializarChat() {
+    cargarDebugInfo();
+    cargarEstadisticas();
+    cargarMensajes();
+    iniciarActualizacionAutomatica();
+    configurarEventos();
+}
+
+function configurarEventos() {
+    // Configurar contador de caracteres
+    const inputMensaje = document.getElementById('input-mensaje');
+    const contadorCaracteres = document.getElementById('contador-caracteres');
+    
+    inputMensaje.addEventListener('input', function() {
+        const longitud = this.value.length;
+        contadorCaracteres.textContent = `${longitud}/500 caracteres`;
+        console.log('Caracteres:', longitud);
+        
+        if (longitud > 450) {
+            contadorCaracteres.className = 'text-warning';
+        } else if (longitud > 0) {
+            contadorCaracteres.className = 'text-info';
+        } else {
+            contadorCaracteres.className = 'text-muted';
+        }
+    });
+    
+    // Manejar envío de mensajes
+    document.getElementById('form-mensaje').addEventListener('submit', function(e) {
+        e.preventDefault();
+        console.log('📤 Enviando mensaje...');
+        enviarMensaje();
+    });
+}
+
+// Cargar información de debug
+function cargarDebugInfo() {
+    fetch('/debug/chat/test')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('debug-status').innerHTML = `
+                Usuario: ${data.session_user_nombre} (ID: ${data.session_user_id})<br>
+                Rol: ${data.session_user_rol}<br>
+                Hora: ${data.timestamp}
+            `;
+        })
+        .catch(error => {
+            document.getElementById('debug-status').innerHTML = 'Error cargando debug';
+        });
+}
+
+// Cargar estadísticas del chat
+function cargarEstadisticas() {
+    console.log('📊 Cargando estadísticas...');
+    fetch('/api/chat/estadisticas')
+        .then(response => {
+            console.log('Respuesta estadísticas:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Datos estadísticas:', data);
+            if (data.success) {
+                const stats = data.estadisticas;
+                document.getElementById('estadisticas-chat').innerHTML = `
+                    <div class="text-center">
+                        <h4 class="text-primary">${stats.total_mensajes}</h4>
+                        <p class="small text-muted">Mensajes totales</p>
+                    </div>
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h6 class="text-success">${stats.activos_hoy}</h6>
+                            <small class="text-muted">Activos hoy</small>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="text-info">${stats.mis_mensajes_hoy}</h6>
+                            <small class="text-muted">Tus mensajes</small>
+                        </div>
+                    </div>
+                `;
+            } else {
+                console.error('Error en estadísticas:', data.error);
+                mostrarAlerta('Error en estadísticas: ' + data.error, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error cargando estadísticas:', error);
+            document.getElementById('estadisticas-chat').innerHTML = `
+                <div class="alert alert-danger">
+                    <small>Error: ${error.message}</small>
+                </div>
+            `;
+        });
+}
+
+// Cargar mensajes del chat
+function cargarMensajes() {
+    console.log('💬 Cargando mensajes...');
+    fetch('/api/chat/mensajes')
+        .then(response => {
+            console.log('Respuesta mensajes:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Datos mensajes:', data);
+            if (data.success) {
+                mostrarMensajes(data.mensajes);
+                document.getElementById('cargando-mensajes').style.display = 'none';
+                document.getElementById('contador-mensajes').textContent = 
+                    `${data.mensajes.length} mensajes`;
+                
+                // Hacer scroll al final
+                setTimeout(() => {
+                    const chatContainer = document.getElementById('chat-messages');
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                }, 100);
+            } else {
+                console.error('Error en mensajes:', data.error);
+                document.getElementById('cargando-mensajes').innerHTML = 
+                    `<p class="text-danger">Error: ${data.error}</p>`;
+            }
+        })
+        .catch(error => {
+            console.error('Error cargando mensajes:', error);
+            document.getElementById('cargando-mensajes').innerHTML = 
+                `<p class="text-danger">Error de conexión: ${error.message}</p>`;
+        });
+}
+
+// Mostrar mensajes en el chat
+function mostrarMensajes(mensajes) {
+    const container = document.getElementById('chat-messages');
+    console.log('Mostrando', mensajes.length, 'mensajes');
+    
+    // Si estamos en carga inicial, limpiar el spinner
+    if (document.getElementById('cargando-mensajes').style.display !== 'none') {
+        container.innerHTML = '';
+    }
+    
+    mensajes.forEach(mensaje => {
+        const mensajeHTML = crearMensajeHTML(mensaje);
+        container.innerHTML += mensajeHTML;
+    });
+}
+
+// Crear HTML para un mensaje
+function crearMensajeHTML(mensaje) {
+    const esMio = mensaje.es_mio;
+    const esAdmin = mensaje.es_admin;
+    
+    return `
+        <div class="message ${esMio ? 'my-message' : 'other-message'} mb-3">
+            <div class="d-flex ${esMio ? 'justify-content-end' : 'justify-content-start'}">
+                <div class="message-bubble ${esMio ? 'bg-primary text-white' : 'bg-white'} 
+                     ${esAdmin ? 'border-warning border-2' : ''}" 
+                     style="max-width: 70%; border-radius: 18px; padding: 12px 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                    
+                    <div class="message-header small d-flex justify-content-between align-items-center mb-1">
+                        <span class="fw-bold ${esAdmin ? 'text-warning' : (esMio ? 'text-light' : 'text-dark')}">
+                            ${mensaje.usuario}
+                            ${esAdmin ? '<i class="fas fa-shield-alt ms-1"></i>' : ''}
+                        </span>
+                        <span class="${esMio ? 'text-light' : 'text-muted'}">
+                            ${mensaje.fecha}
+                        </span>
+                    </div>
+                    
+                    <div class="message-content">
+                        ${mensaje.mensaje}
+                    </div>
+                    
+                    ${esMio ? '<div class="text-end small mt-1"><i class="fas fa-check-double text-light"></i></div>' : ''}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Enviar nuevo mensaje
+function enviarMensaje() {
+    const input = document.getElementById('input-mensaje');
+    const mensaje = input.value.trim();
+    const btnEnviar = document.getElementById('btn-enviar');
+    
+    console.log('Enviando mensaje:', mensaje);
+    
+    if (!mensaje) {
+        mostrarAlerta('El mensaje no puede estar vacío', 'warning');
+        return;
+    }
+    
+    // Deshabilitar botón temporalmente
+    btnEnviar.disabled = true;
+    btnEnviar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+    
+    fetch('/api/chat/enviar', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ mensaje: mensaje })
+    })
+    .then(response => {
+        console.log('Respuesta enviar:', response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Resultado enviar:', data);
+        if (data.success) {
+            input.value = '';
+            document.getElementById('contador-caracteres').textContent = '0/500 caracteres';
+            document.getElementById('contador-caracteres').className = 'text-muted';
+            
+            // Recargar mensajes para mostrar el nuevo
+            cargarMensajes();
+            cargarEstadisticas();
+            
+            mostrarAlerta('✅ Mensaje enviado correctamente', 'success');
+        } else {
+            throw new Error(data.error || 'Error desconocido');
+        }
+    })
+    .catch(error => {
+        console.error('Error enviando mensaje:', error);
+        mostrarAlerta('❌ Error al enviar mensaje: ' + error.message, 'danger');
+    })
+    .finally(() => {
+        btnEnviar.disabled = false;
+        btnEnviar.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar';
+    });
+}
+
+// Debug del chat
+function debugChat() {
+    console.clear();
+    console.log('=== DEBUG CHAT ===');
+    console.log('Session:', {
+        user_id: '{{ session.user_id }}',
+        user_nombre: '{{ session.user_nombre }}',
+        user_rol: '{{ session.user_rol }}'
+    });
+    
+    // Probar todas las APIs
+    Promise.all([
+        fetch('/debug/chat/test').then(r => r.json()),
+        fetch('/debug/chat/tabla').then(r => r.json()),
+        fetch('/api/chat/mensajes').then(r => r.json()),
+        fetch('/api/chat/estadisticas').then(r => r.json())
+    ]).then(results => {
+        console.log('1. Debug Test:', results[0]);
+        console.log('2. Tabla Chat:', results[1]);
+        console.log('3. Mensajes:', results[2]);
+        console.log('4. Estadísticas:', results[3]);
+        
+        alert('Debug completado. Revisa la consola (F12)');
+    }).catch(error => {
+        console.error('Error en debug:', error);
+        alert('Error en debug: ' + error.message);
+    });
+}
+
+// Actualización automática cada 5 segundos
+function iniciarActualizacionAutomatica() {
+    intervaloActualizacion = setInterval(() => {
+        cargarMensajes();
+        cargarEstadisticas();
+    }, 5000);
+}
+
+// Función auxiliar para mostrar alertas
+function mostrarAlerta(mensaje, tipo) {
+    const alerta = document.createElement('div');
+    alerta.className = `alert alert-${tipo} alert-dismissible fade show mt-3`;
+    alerta.innerHTML = `
+        ${mensaje}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const cardBody = document.querySelector('.card-body');
+    cardBody.insertBefore(alerta, cardBody.firstChild);
+    
+    setTimeout(() => {
+        if (alerta.parentNode) {
+            alerta.remove();
+        }
+    }, 5000);
+}
+
+// Limpiar intervalo cuando se cierre la página
+window.addEventListener('beforeunload', function() {
+    if (intervaloActualizacion) {
+        clearInterval(intervaloActualizacion);
+    }
+});
+</script>
+
+<style>
+.chat-messages {
+    background: #f8f9fa;
+    padding: 20px;
+}
+
+.message-bubble {
+    border: 1px solid #e9ecef;
+}
+
+.my-message .message-bubble {
+    border-bottom-right-radius: 5px !important;
+}
+
+.other-message .message-bubble {
+    border-bottom-left-radius: 5px !important;
+}
+
+.message-header {
+    font-size: 0.8rem;
+}
+
+.message-content {
+    word-wrap: break-word;
+}
+
+.debug-info {
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 5px;
+    border-left: 4px solid #0d6efd;
+}
+</style>
+{% endblock %}

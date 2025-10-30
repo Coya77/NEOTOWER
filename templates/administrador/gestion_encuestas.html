@@ -1,0 +1,115 @@
+<!-- templates/administrador/gestion_encuestas.html (nuevo: lista encuestas con acciones) -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-graph-up"></i> Gestión de Encuestas</h2>
+        <a href="{{ url_for('votaciones.admin_nueva_encuesta') }}" class="btn btn-primary">
+            <i class="bi bi-plus"></i> Nueva Encuesta
+        </a>
+    </div>
+
+    <!-- Flashes -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Filtros (opcional: por estado o fecha) -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <label for="estado" class="form-label">Estado</label>
+                    <select name="estado" id="estado" class="form-select">
+                        <option value="todos" {{ 'selected' if filtro_estado_actual == 'todos' else '' }}>Todos</option>
+                        <option value="activa" {{ 'selected' if filtro_estado_actual == 'activa' else '' }}>Activas</option>
+                        <option value="finalizada" {{ 'selected' if filtro_estado_actual == 'finalizada' else '' }}>Finalizadas</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="fecha" class="form-label">Fecha Creación</label>
+                    <input type="date" name="fecha" id="fecha" class="form-control" value="{{ request.args.get('fecha') }}">
+                </div>
+                <div class="col-md-6 d-flex align-items-end">
+                    <button type="submit" class="btn btn-outline-secondary me-2">Filtrar</button>
+                    <a href="{{ url_for('votaciones.admin_gestion_encuestas') }}" class="btn btn-secondary">Limpiar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lista de Encuestas -->
+    <div class="card shadow">
+        <div class="card-header bg-info text-white">
+            <h5>Encuestas {{ 'Activas' if filtro_estado_actual == 'activa' else 'Finalizadas' if filtro_estado_actual == 'finalizada' else 'Todas' }}</h5>
+        </div>
+        <div class="card-body">
+            {% if encuestas and encuestas|length > 0 %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Título</th>
+                                <th>Descripción</th>
+                                <th>Fecha Inicio</th>
+                                <th>Fecha Fin</th>
+                                <th>Total Votos</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for encuesta in encuestas %}
+                            <tr>
+                                <td>{{ encuesta.id_encuesta }}</td>
+                                <td><strong>{{ encuesta.titulo }}</strong></td>
+                                <td>{{ encuesta.descripcion[:50] }}...</td>
+                                <td>{{ encuesta.fecha_inicio.strftime('%d/%m/%Y') if encuesta.fecha_inicio else 'N/A' }}</td>
+                                <td>{{ encuesta.fecha_fin.strftime('%d/%m/%Y') if encuesta.fecha_fin else 'N/A' }}</td>
+                                <td><span class="badge bg-success">{{ encuesta.total_votos or 0 }}</span></td>
+                                <td>
+                                    <span class="badge {{ 'bg-success' if encuesta.activa else 'bg-secondary' }}">
+                                        {{ 'Activa' if encuesta.activa else 'Finalizada' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('votaciones.admin_resultados_encuesta', id_encuesta=encuesta.id_encuesta) }}" class="btn btn-info btn-sm me-1">
+                                        <i class="bi bi-bar-chart"></i> Resultados
+                                    </a>
+                                    <a href="{{ url_for('votaciones.admin_editar_encuesta', id_encuesta=encuesta.id_encuesta) }}" class="btn btn-warning btn-sm me-1">
+                                        <i class="bi bi-pencil"></i> Editar
+                                    </a>
+                                    <form method="POST" action="{{ url_for('votaciones.admin_eliminar_encuesta', id_encuesta=encuesta.id_encuesta) }}" style="display: inline;" onsubmit="return confirm('¿Eliminar encuesta?');">
+                                        <button type="submit" class="btn btn-danger btn-sm">
+                                            <i class="bi bi-trash"></i> Eliminar
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-muted">Mostrando {{ encuestas|length }} encuestas.</p>
+            {% else %}
+                <div class="alert alert-info text-center">
+                    <h5><i class="bi bi-inbox"></i> No Hay Encuestas</h5>
+                    <p>No se han creado encuestas aún. Crea la primera usando el botón arriba.</p>
+                    <a href="{{ url_for('votaciones.admin_nueva_encuesta') }}" class="btn btn-primary">
+                        <i class="bi bi-plus"></i> Crear Primera Encuesta
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

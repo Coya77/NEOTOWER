@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Detalle de Reserva{% endblock %}
+{% block content %}
+
+<div class="container mt-4">
+  <!-- Mensajes Flash -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}" role="alert">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- Encabezado -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="text-primary"><i class="bi bi-info-circle"></i> Detalle de Reserva</h2>
+    <a href="{{ url_for('reservas') }}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> Volver a Mis Reservas
+    </a>
+  </div>
+
+  <!-- Información de la Reserva -->
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h5 class="card-title text-primary mb-3">{{ reserva.tipo }}</h5>
+      <p class="card-text">
+        <strong>Descripción:</strong> {{ reserva.descripcion }}<br>
+        <strong>Fecha inicio:</strong> {{ reserva.fecha_inicio.strftime('%d/%m/%Y') }}<br>
+        <strong>Horario:</strong> {{ reserva.horario }}<br>
+        <strong>Número de personas:</strong> {{ reserva.numero_personas }}<br>
+        <strong>Costo total:</strong> Bs. {{ "%.2f"|format(reserva.costo_reserva) }}<br>
+        <strong>Estado:</strong>
+        <span class="badge bg-{{ reserva.estado_badge }}">{{ reserva.estado|capitalize }}</span><br>
+        <strong>Usuario:</strong> {{ reserva.nombre }} {{ reserva.apellido }}
+      </p>
+    </div>
+  </div>
+
+<!-- Acciones -->
+<div class="mt-4 d-flex flex-column gap-3">
+
+  <!-- Entregar Ambiente -->
+  <form action="{{ url_for('entregar_ambiente', id_reserva=reserva.id_reserva) }}" method="POST" class="card p-3 shadow-sm">
+    <h6><i class="bi bi-house-check text-primary"></i> Entregar Ambiente</h6>
+    <textarea name="comentario" class="form-control mb-2" rows="2" placeholder="Ej: Entrego el ambiente en buenas condiciones..." required></textarea>
+    <button type="submit" class="btn btn-primary btn-sm w-50"><i class="bi bi-send"></i> Confirmar Entrega</button>
+  </form>
+
+  <!-- Solicitar Cancelación -->
+  <form action="{{ url_for('cancelar_reserva', id_reserva=reserva.id_reserva) }}" method="POST" class="card p-3 shadow-sm">
+    <h6><i class="bi bi-x-circle text-danger"></i> Solicitar Cancelación</h6>
+    <textarea name="motivo" class="form-control mb-2" rows="2" placeholder="Describe brevemente el motivo de cancelación..." required></textarea>
+    <button type="submit" class="btn btn-danger btn-sm w-50"><i class="bi bi-x-circle"></i> Enviar Solicitud</button>
+  </form>
+
+  <!-- Factura -->
+  <a href="{{ url_for('generar_factura_reserva', id_reserva=reserva.id_reserva) }}" class="btn btn-success mt-2">
+    <i class="bi bi-qr-code"></i> Generar Factura con QR
+  </a>
+</div>
+
+{% endblock %}

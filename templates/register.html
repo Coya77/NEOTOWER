@@ -1,0 +1,188 @@
+<!-- templates/register.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h3 class="text-center"><i class="bi bi-person-plus-fill"></i> Registro - NEOTOWER</h3>
+                <p class="text-center mb-0">Sistema de Edificio Inteligente</p>
+            </div>
+            <div class="card-body">
+                <!-- Mensajes flash -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                  {% if messages %}
+                    <div class="mb-3">
+                      {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                          {{ message }}
+                          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                {% endwith %}
+
+                <form method="POST" action="{{ url_for('register') }}" id="registerForm" class="needs-validation" novalidate>
+                    <!-- Información Personal -->
+                    <h5 class="border-bottom pb-2">Información Personal</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="nombre" class="form-label">Nombre *</label>
+                            <input type="text" class="form-control" id="nombre" name="nombre" required>
+                            <div class="invalid-feedback">Por favor ingresa tu nombre.</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="apellido" class="form-label">Apellido *</label>
+                            <input type="text" class="form-control" id="apellido" name="apellido" required>
+                            <div class="invalid-feedback">Por favor ingresa tu apellido.</div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email *</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                        <div class="invalid-feedback">Por favor ingresa un email válido.</div>
+                    </div>
+
+                    <!-- Información de Contacto -->
+                    <h5 class="border-bottom pb-2 mt-4">Información de Contacto</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="telefono" class="form-label">Teléfono</label>
+                            <input type="tel" class="form-control" id="telefono" name="telefono">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="tipo_residente" class="form-label">Tipo de Residente *</label>
+                            <select class="form-select" id="tipo_residente" name="tipo_residente" required>
+                                <option value="" selected disabled>Selecciona una opción</option>
+                                <option value="propietario">Propietario</option>
+                                <option value="inquilino">Inquilino</option>
+                                <option value="familiar">Familiar</option>
+                            </select>
+                            <div class="invalid-feedback">Selecciona tu tipo de residente.</div>
+                        </div>
+                    </div>
+
+                    <!-- Seguridad -->
+                    <h5 class="border-bottom pb-2 mt-4">Seguridad</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="password" class="form-label">Contraseña *</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                            <div class="invalid-feedback">
+                                La contraseña debe tener al menos 6 caracteres.
+                            </div>
+                            <div class="password-strength mt-2">
+                                <div class="progress" style="height: 5px;">
+                                    <div class="progress-bar" role="progressbar" style="width: 0%;"></div>
+                                </div>
+                                <small class="password-strength-text">Seguridad de la contraseña</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="confirm_password" class="form-label">Confirmar Contraseña *</label>
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                            <div class="invalid-feedback">Las contraseñas no coinciden.</div>
+                        </div>
+                    </div>
+
+                    <!-- Términos -->
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="terminos" name="terminos" required>
+                        <label class="form-check-label" for="terminos">
+                            Acepto los <a href="#" data-bs-toggle="modal" data-bs-target="#terminosModal">términos y condiciones</a> *
+                        </label>
+                        <div class="invalid-feedback">Debes aceptar los términos para registrarte.</div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-2">
+                        <i class="bi bi-person-plus"></i> Registrarse
+                    </button>
+
+                    <div class="text-center mt-3">
+                        <p>¿Ya tienes una cuenta? <a href="{{ url_for('login') }}">Inicia sesión aquí</a></p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Términos -->
+<div class="modal fade" id="terminosModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Términos y Condiciones - NEOTOWER</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>1. Aceptación de Términos</h6>
+                <p>Al registrarte en el sistema NEOTOWER, aceptas cumplir con estos términos.</p>
+                <h6>2. Uso del Sistema</h6>
+                <p>El acceso está restringido a residentes y personal autorizado.</p>
+                <h6>3. Protección de Datos</h6>
+                <p>Se protegerán tus datos conforme a la ley aplicable.</p>
+                <h6>4. Responsabilidades</h6>
+                <p>Eres responsable de mantener la confidencialidad de tu cuenta.</p>
+                <h6>5. Contacto</h6>
+                <p>administracion@neotower.com</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('registerForm');
+    const password = document.getElementById('password');
+    const confirmPassword = document.getElementById('confirm_password');
+    const progressBar = document.querySelector('.progress-bar');
+    const strengthText = document.querySelector('.password-strength-text');
+
+    // Confirmación de contraseña
+    confirmPassword.addEventListener('input', function() {
+        confirmPassword.setCustomValidity(password.value !== confirmPassword.value ? 'Las contraseñas no coinciden' : '');
+    });
+
+    // Medidor de fuerza
+    password.addEventListener('input', function() {
+        const val = password.value;
+        let strength = 0;
+        if (val.length >= 6) strength += 20;
+        if (val.length >= 8) strength += 20;
+        if (/[A-Z]/.test(val)) strength += 20;
+        if (/[0-9]/.test(val)) strength += 20;
+        if (/[^A-Za-z0-9]/.test(val)) strength += 20;
+
+        progressBar.style.width = strength + '%';
+        if (strength < 40) {
+            progressBar.className = 'progress-bar bg-danger';
+            strengthText.textContent = 'Débil';
+        } else if (strength < 80) {
+            progressBar.className = 'progress-bar bg-warning';
+            strengthText.textContent = 'Moderada';
+        } else {
+            progressBar.className = 'progress-bar bg-success';
+            strengthText.textContent = 'Fuerte';
+        }
+    });
+
+    // Validación bootstrap
+    form.addEventListener('submit', function(event) {
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+    });
+});
+</script>
+{% endblock %}

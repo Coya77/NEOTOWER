@@ -1,0 +1,66 @@
+<!-- templates/chat/comunitario.html (chat directo sin moderación) -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2><i class="bi bi-chat-dots"></i> Chat Comunitario</h2>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary mb-3">Volver al Dashboard</a>
+
+    <!-- Flashes -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Form para nuevo mensaje -->
+    <div class="card shadow mb-4">
+        <div class="card-header">
+            <h5>Enviar Mensaje</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                <div class="mb-3">
+                    <label for="mensaje" class="form-label">Tu Mensaje (máx. 500 chars)</label>
+                    <textarea class="form-control" id="mensaje" name="mensaje" rows="3" maxlength="500" placeholder="Escribe tu mensaje para la comunidad..." required></textarea>
+                    <div class="form-text">Manténlo positivo y respetuoso.</div>
+                </div>
+                <button type="submit" class="btn btn-primary">Enviar Mensaje</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lista de mensajes visibles -->
+    <div class="card shadow">
+        <div class="card-header">
+            <h5>Mensajes Recientes</h5>
+        </div>
+        <div class="card-body">
+            {% if mensajes and mensajes|length > 0 %}
+                <div class="list-group">
+                    {% for msg in mensajes %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ msg.nombre_usuario }}</h6>
+                            <small class="text-muted">{{ msg.fecha_envio.strftime('%d/%m/%Y %H:%M') if msg.fecha_envio else 'N/A' }}</small>
+                        </div>
+                        <p class="mb-1">{{ msg.mensaje }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                <p class="text-muted mt-3">Mostrando {{ mensajes|length }} mensajes recientes.</p>
+            {% else %}
+                <div class="alert alert-info text-center">
+                    <h6><i class="bi bi-chat-square-text"></i> No Hay Mensajes Aún</h6>
+                    <p>Sé el primero en escribir algo en el chat comunitario.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

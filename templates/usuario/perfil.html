@@ -1,0 +1,201 @@
+<!-- templates/usuario/perfil.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <!-- Header del Perfil -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="bi bi-person-circle me-2"></i>Mi Perfil</h2>
+                <span class="badge bg-primary">{{ usuario.rol|capitalize }}</span>
+            </div>
+            <p class="text-muted">Gestiona tu información personal y revisa tu historial</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Información Personal -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Información Personal</h5>
+                </div>
+                <div class="card-body">
+                    {% if usuario %}
+                    <div class="text-center mb-3">
+                        <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center" 
+                             style="width: 80px; height: 80px;">
+                            <span class="text-white fw-bold fs-4">
+                                {{ usuario.nombre[0] }}{{ usuario.apellido[0] }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nombre completo</label>
+                        <p class="form-control-plaintext">{{ usuario.nombre }} {{ usuario.apellido }}</p>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Email</label>
+                        <p class="form-control-plaintext">{{ usuario.email }}</p>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Teléfono</label>
+                        <p class="form-control-plaintext">
+                            {{ usuario.telefono if usuario.telefono else 'No registrado' }}
+                        </p>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Fecha de registro</label>
+                        <p class="form-control-plaintext">
+                            {{ usuario.fecha_registro.strftime('%d/%m/%Y') if usuario.fecha_registro else 'No especificada' }}
+                        </p>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Departamento</label>
+                        <p class="form-control-plaintext">
+                            {% if departamento %}
+                                {{ departamento.numero }} - Piso {{ departamento.piso }} ({{ departamento.estado }})
+                            {% else %}
+                                No asignado
+                            {% endif %}
+                        </p>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Rol</label>
+                        <p class="form-control-plaintext">
+                            <span class="badge bg-{{ 'success' if usuario.rol == 'residente' else 'warning' }}">
+                                {{ usuario.rol }}
+                            </span>
+                        </p>
+                    </div>
+                    {% else %}
+                    <p class="text-center text-muted">No se pudieron cargar los datos del perfil.</p>
+                    {% endif %}
+
+                    <div class="d-grid">
+                        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editarPerfilModal">
+                            <i class="bi bi-pencil"></i> Editar Perfil
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Historial de Pagos -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-credit-card"></i> Historial de Pagos</h5>
+                </div>
+                <div class="card-body">
+                    {% if pagos %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Tipo</th>
+                                    <th>Monto</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pago in pagos %}
+                                <tr>
+                                    <td>{{ pago.fecha.strftime('%d/%m/%Y') if pago.fecha else 'N/A' }}</td>
+                                    <td>{{ pago.tipo }}</td>
+                                    <td>S/ {{ "%.2f"|format(pago.monto) }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if pago.estado == 'completado' else 'warning' if pago.estado == 'pendiente' else 'danger' }}">
+                                            {{ pago.estado }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-receipt display-4 text-muted"></i>
+                        <p class="text-muted mt-2">No hay historial de pagos disponible</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Accesos Rápidos -->
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100 text-center">
+                        <div class="card-body">
+                            <i class="bi bi-droplet display-4 text-primary"></i>
+                            <h5>Consumo de Servicios</h5>
+                            <p class="text-muted">Consulta tu consumo</p>
+                            <a href="{{ url_for('consumo') }}" class="btn btn-outline-primary btn-sm">
+                                Ver Consumo
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100 text-center">
+                        <div class="card-body">
+                            <i class="bi bi-clipboard-check display-4 text-success"></i>
+                            <h5>Reportar Incidencia</h5>
+                            <p class="text-muted">Reporta problemas</p>
+                            <a href="{{ url_for('reportar_incidencia') }}" class="btn btn-outline-success btn-sm">
+                                Reportar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Perfil -->
+<div class="modal fade" id="editarPerfilModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Perfil</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('actualizar_perfil') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre</label>
+                        <input type="text" class="form-control" value="{{ usuario.nombre }}" name="nombre" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Apellido</label>
+                        <input type="text" class="form-control" value="{{ usuario.apellido }}" name="apellido" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Teléfono</label>
+                        <input type="tel" class="form-control" value="{{ usuario.telefono if usuario.telefono }}" name="telefono">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" value="{{ usuario.email }}" disabled>
+                        <small class="form-text text-muted">El email no puede ser modificado</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

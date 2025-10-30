@@ -1,0 +1,87 @@
+<!-- templates/administrador/reportes_auditoria.html -->
+{% extends "base.html" %}
+
+{% block title %}Reportes de Auditoría{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-3">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0"><i class="bi bi-clipboard-data me-2"></i>Reportes de Auditoría</h2>
+  </div>
+
+  <!-- Filtros -->
+  <form method="GET" action="{{ url_for('reportes_auditoria') }}" class="card mb-4">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-3">
+          <label class="form-label">Fecha inicio</label>
+          <input type="date" class="form-control" name="fecha_inicio" value="{{ request.args.get('fecha_inicio','') }}">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Fecha fin</label>
+          <input type="date" class="form-control" name="fecha_fin" value="{{ request.args.get('fecha_fin','') }}">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Usuario</label>
+          <input type="text" class="form-control" name="usuario" placeholder="Nombre o email" value="{{ request.args.get('usuario','') }}">
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+          <button type="submit" class="btn btn-primary w-100">
+            <i class="bi bi-search"></i> Filtrar
+          </button>
+        </div>
+      </div>
+    </div>
+  </form>
+
+  <!-- Tabla -->
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0"><i class="bi bi-table me-2"></i>Historial de Acciones</h5>
+      <span class="badge bg-secondary">{{ auditoria|length }} registros</span>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>#</th>
+              <th>Usuario</th>
+              <th>Evento</th>
+              <th>Acción</th>
+              <th>Fecha</th>
+              <th>Resultado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for reg in auditoria %}
+            <tr>
+              <td>{{ loop.index }}</td>
+              <td>{{ reg.usuario or '—' }}</td>
+              <td>{{ reg.detalle }}</td>
+              <td>{{ reg.accion }}</td>
+              <td>
+                {% if reg.fecha.__class__.__name__ in ['datetime','date'] %}
+                  {{ reg.fecha.strftime('%Y-%m-%d') }}
+                {% else %}
+                  {{ reg.fecha }}
+                {% endif %}
+              </td>
+              <td>{{ reg.resultado }}</td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="6" class="text-center text-muted py-4">
+                <i class="bi bi-journal-x fs-1 d-block mb-2"></i>
+                No se encontraron registros de auditoría
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

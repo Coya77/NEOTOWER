@@ -1,0 +1,199 @@
+<!-- templates/quejas/nueva_queja.html -->
+{% extends "base.html" %}
+{% block title %}Buzón de Quejas - NEOTOWER{% endblock %}
+
+{% block content %}
+<style>
+:root {
+  --primary-blue: #2563eb;
+  --mint-green: #10b981;
+  --dark-black: #1f2937;
+  --gradient-bg: linear-gradient(135deg, var(--primary-blue) 0%, var(--mint-green) 100%);
+}
+
+body {
+  background: var(--gradient-bg);
+  min-height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.container-center {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+}
+
+.card-style {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: none;
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  max-width: 800px;
+  width: 100%;
+}
+
+.card-header-custom {
+  background: linear-gradient(135deg, var(--dark-black) 0%, var(--primary-blue) 100%);
+  padding: 35px;
+  text-align: center;
+  color: white;
+  position: relative;
+}
+
+.card-header-custom::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+  opacity: 0.4;
+}
+.card-header-custom h2 {
+  position: relative;
+  z-index: 1;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+.card-header-custom p {
+  position: relative;
+  z-index: 1;
+  opacity: 0.85;
+}
+
+.form-label {
+  color: var(--dark-black);
+  font-weight: 600;
+}
+
+.form-control, .form-select {
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px 15px;
+  transition: all 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: var(--mint-green);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+}
+
+.btn-primary {
+  background: var(--gradient-bg);
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  padding: 12px 28px;
+  transition: all 0.3s ease;
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, var(--mint-green) 0%, var(--primary-blue) 100%);
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
+}
+
+.btn-secondary {
+  border-radius: 12px;
+  font-weight: 500;
+  padding: 12px 28px;
+  background-color: #e5e7eb;
+  border: none;
+  color: #374151;
+}
+.btn-secondary:hover {
+  background-color: #d1d5db;
+}
+
+.form-check-input {
+  accent-color: var(--mint-green);
+}
+
+.alert {
+  border-radius: 12px;
+}
+</style>
+
+<div class="container-center">
+  <div class="card-style">
+    <div class="card-header-custom">
+      <h2><i class="bi bi-chat-dots me-2"></i>Buzón de Quejas y Sugerencias</h2>
+      <p>Tu opinión es importante para nosotros</p>
+    </div>
+
+    <div class="card-body p-4">
+      <!-- Mensajes flash -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <form method="POST">
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label for="tipo" class="form-label">Tipo de mensaje *</label>
+            <select class="form-select" id="tipo" name="tipo" required>
+              <option value="">Selecciona un tipo</option>
+              <option value="sugerencia">💡 Sugerencia</option>
+              <option value="queja">⚠️ Queja</option>
+              <option value="reclamo">🚩 Reclamo</option>
+              <option value="felicitacion">🎉 Felicitación</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label for="prioridad" class="form-label">Prioridad *</label>
+            <select class="form-select" id="prioridad" name="prioridad" required>
+              <option value="media">🟡 Media</option>
+              <option value="baja">🟢 Baja</option>
+              <option value="alta">🟠 Alta</option>
+              <option value="urgente">🔴 Urgente</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="asunto" class="form-label">Asunto *</label>
+          <input type="text" class="form-control" id="asunto" name="asunto"
+                 placeholder="Describe brevemente el asunto" required maxlength="200">
+        </div>
+
+        <div class="mb-3">
+          <label for="descripcion" class="form-label">Descripción detallada *</label>
+          <textarea class="form-control" id="descripcion" name="descripcion"
+                    rows="6" placeholder="Describe tu queja o sugerencia de manera detallada..." required></textarea>
+          <div class="form-text text-muted">
+            <i class="bi bi-info-circle"></i> Sé específico y claro para ayudarnos a mejorar tu experiencia.
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="anonimo" name="anonimo">
+            <label class="form-check-label" for="anonimo">
+              <i class="bi bi-eye-slash me-1"></i>Enviar de forma anónima
+            </label>
+          </div>
+          <small class="text-muted">Tu mensaje será procesado, pero tu identidad no será visible.</small>
+        </div>
+
+        <div class="d-flex justify-content-end">
+          <a href="{{ url_for('dashboard') }}" class="btn btn-secondary me-2">
+            <i class="bi bi-arrow-left me-1"></i>Volver
+          </a>
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-send me-1"></i>Enviar Mensaje
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,225 @@
+<!-- templates/anuncios/muro_anuncios.html (versión corregida) -->
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+:root {
+  --color-azul: #0e648b;
+  --color-azul-oscuro: #2a3a44;
+  --color-verde: #209278;
+  --color-negro-azulado: #1d262d;
+  --color-azul-secundario: #1b5367;
+  --color-verde-claro: #299f83;
+  --color-gris: #575e63;
+}
+
+.card-header.bg-primary { background: linear-gradient(135deg, var(--color-azul) 0%, var(--color-azul-secundario) 100%) !important; }
+.card-header.bg-warning { background: linear-gradient(135deg, var(--color-verde) 0%, var(--color-verde-claro) 100%) !important; color: white !important; }
+.card-header.bg-danger { background: linear-gradient(135deg, var(--color-azul-oscuro) 0%, var(--color-negro-azulado) 100%) !important; }
+.card-header.bg-info { background: linear-gradient(135deg, var(--color-azul-secundario) 0%, var(--color-azul) 100%) !important; }
+
+.badge.bg-primary { background-color: var(--color-azul) !important; }
+.badge.bg-warning { background-color: var(--color-verde) !important; color: white !important; }
+.badge.bg-danger { background-color: var(--color-azul-oscuro) !important; }
+.badge.bg-info { background-color: var(--color-azul-secundario) !important; }
+.badge.bg-success { background-color: var(--color-verde-claro) !important; }
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--color-azul) 0%, var(--color-azul-secundario) 100%);
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, var(--color-azul-secundario) 0%, var(--color-azul) 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(14, 100, 139, 0.3);
+}
+
+.filter-active {
+    background: linear-gradient(135deg, var(--color-verde) 0%, var(--color-verde-claro) 100%) !important;
+    color: white !important;
+    border-color: var(--color-verde) !important;
+}
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-megaphone me-2"></i>Muro de Anuncios</h2>
+    {% if session.user_rol == 'administrador' and (filtro_actual == 'todos' or filtro_actual == 'general') %}
+    <a href="{{ url_for('anuncios.gestion_anuncios') }}" class="btn btn-primary">  <!-- ¡AQUÍ EL FIX: agregué 'anuncios.' -->
+        <i class="bi bi-gear"></i> Gestionar Anuncios
+    </a>
+    {% endif %}
+</div>
+
+<!-- Filtros con enlaces directos -->
+<div class="card mb-4 shadow-sm">
+    <div class="card-body">
+        <h6 class="card-title mb-3"><i class="bi bi-funnel"></i> Filtrar por tipo:</h6>
+        <div class="btn-group btn-group-sm" role="group">
+            <a href="{{ url_for('anuncios.muro_anuncios', tipo='todos') }}" 
+               class="btn btn-outline-primary {{ 'filter-active' if filtro_actual == 'todos' }}">
+                <i class="bi bi-grid-3x3-gap"></i> Todos
+            </a>
+            <a href="{{ url_for('anuncios.muro_anuncios', tipo='general') }}" 
+               class="btn btn-outline-primary {{ 'filter-active' if filtro_actual == 'general' }}">
+                <i class="bi bi-megaphone"></i> General
+            </a>
+            <a href="{{ url_for('anuncios.muro_anuncios', tipo='importante') }}" 
+               class="btn btn-outline-primary {{ 'filter-active' if filtro_actual == 'importante' }}">
+                <i class="bi bi-exclamation-triangle"></i> Importante
+            </a>
+            <a href="{{ url_for('anuncios.muro_anuncios', tipo='mantenimiento') }}" 
+               class="btn btn-outline-primary {{ 'filter-active' if filtro_actual == 'mantenimiento' }}">
+                <i class="bi bi-tools"></i> Mantenimiento
+            </a>
+            <a href="{{ url_for('anuncios.muro_anuncios', tipo='evento') }}" 
+               class="btn btn-outline-primary {{ 'filter-active' if filtro_actual == 'evento' }}">
+                <i class="bi bi-calendar-event"></i> Evento
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Contador de anuncios -->
+<div class="mb-3">
+    <span class="badge bg-primary fs-6">
+        <i class="bi bi-megaphone me-1"></i>
+        {{ anuncios|length }} anuncio(s) 
+        {% if filtro_actual != 'todos' %}
+        de tipo "{{ filtro_actual|title }}"
+        {% endif %}
+    </span>
+</div>
+
+<!-- Lista de Anuncios -->
+<div class="row">
+    <div class="col-12">
+        {% if anuncios %}
+            {% for anuncio in anuncios %}
+            <div class="card mb-4 shadow-sm anuncio-item">
+                <div class="card-header d-flex justify-content-between align-items-center
+                    {% if anuncio.tipo == 'importante' %}bg-danger
+                    {% elif anuncio.tipo == 'mantenimiento' %}bg-warning
+                    {% elif anuncio.tipo == 'evento' %}bg-info
+                    {% else %}bg-primary{% endif %} text-white">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi 
+                            {% if anuncio.tipo == 'importante' %}bi-exclamation-triangle-fill
+                            {% elif anuncio.tipo == 'mantenimiento' %}bi-tools
+                            {% elif anuncio.tipo == 'evento' %}bi-calendar-event
+                            {% else %}bi-megaphone-fill{% endif %} me-2"></i>
+                        {{ anuncio.titulo or 'Sin título' }}
+                    </h5>
+                    <div>
+                        <span class="badge bg-light 
+                            {% if anuncio.tipo == 'importante' %}text-danger
+                            {% elif anuncio.tipo == 'mantenimiento' %}text-warning
+                            {% elif anuncio.tipo == 'evento' %}text-info
+                            {% else %}text-primary{% endif %} me-2">
+                            {{ anuncio.tipo|title or 'General' }}
+                        </span>
+                        {% if anuncio.fecha_expiracion and anuncio.fecha_expiracion < hoy %}
+                        <span class="badge bg-secondary">Expirado</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <div class="anuncio-contenido" style="white-space: pre-line; line-height: 1.6;">
+                        {{ anuncio.contenido or 'Sin contenido' }}
+                    </div>
+                    
+                    <div class="mt-4 pt-3 border-top">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <small class="text-muted">
+                                    <i class="bi bi-person-circle me-1"></i>
+                                    <strong>Publicado por:</strong> {{ anuncio.autor or 'Anónimo' }}
+                                </small>
+                            </div>
+                            <div class="col-md-6 text-md-end">
+                                <small class="text-muted">
+                                    <i class="bi bi-clock me-1"></i>
+                                    {{ anuncio.fecha_publicacion.strftime('%d/%m/%Y a las %H:%M') if anuncio.fecha_publicacion else 'Fecha no disponible' }}
+                                </small>
+                            </div>
+                        </div>
+                        
+                        {% if anuncio.fecha_expiracion %}
+                        <div class="row mt-2">
+                            <div class="col-12">
+                                <small class="text-muted">
+                                    <i class="bi bi-calendar-x me-1"></i>
+                                    <strong>Expira:</strong> {{ anuncio.fecha_expiracion.strftime('%d/%m/%Y') }}
+                                    {% if anuncio.fecha_expiracion < hoy %}
+                                    <span class="badge bg-secondary ms-2">Expirado</span>
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="card shadow-sm">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-megaphone display-1 text-muted mb-3"></i>
+                    <h4 class="text-muted mb-3">
+                        {% if filtro_actual != 'todos' %}
+                        No hay anuncios de tipo "{{ filtro_actual|title }}"
+                        {% else %}
+                        No hay anuncios disponibles
+                        {% endif %}
+                    </h4>
+                    <p class="text-muted mb-4">
+                        {% if filtro_actual != 'todos' %}
+                        No se encontraron anuncios activos de este tipo.
+                        {% else %}
+                        No hay anuncios activos en este momento.
+                        {% endif %}
+                    </p>
+                    {% if session.user_rol == 'administrador' %}
+                    <a href="{{ url_for('anuncios.nuevo_anuncio') }}" class="btn btn-primary me-2">
+                        <i class="bi bi-plus-circle me-2"></i>Crear nuevo anuncio
+                    </a>
+                    {% endif %}
+                    {% if filtro_actual != 'todos' %}
+                    <a href="{{ url_for('anuncios.muro_anuncios', tipo='todos') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-arrow-counterclockwise me-2"></i>Ver todos los anuncios
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // JS opcional: Tooltips para badges y mejora de UX
+    document.addEventListener('DOMContentLoaded', function() {
+        // Agrega tooltips a badges de tipo (si usas Bootstrap tooltips)
+        var badges = document.querySelectorAll('.badge');
+        badges.forEach(function(badge) {
+            if (badge.textContent.includes('Importante') || badge.textContent.includes('Urgente')) {
+                badge.title = 'Anuncio prioritario - Revisa inmediatamente';
+            } else if (badge.textContent.includes('Mantenimiento')) {
+                badge.title = 'Información sobre mantenimiento del sistema';
+            }
+        });
+        
+        // Inicializa tooltips de Bootstrap si está disponible
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+        
+        console.log('Muro de anuncios cargado. Anuncios visibles: {{ anuncios|length }}');
+    });
+</script>
+{% endblock %}

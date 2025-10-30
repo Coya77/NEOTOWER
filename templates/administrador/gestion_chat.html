@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}Gestión del Chat - NEOTOWER{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-comments"></i> Gestión del Chat Comunitario
+                    </h4>
+                    <div>
+                        <button class="btn btn-danger btn-sm" onclick="limpiarChat()">
+                            <i class="fas fa-trash"></i> Limpiar Chat
+                        </button>
+                        <a href="{{ url_for('chat_comunitario') }}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-eye"></i> Ver Chat
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Estadísticas -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body text-center">
+                                    <h3>{{ estadisticas.total_mensajes or 0 }}</h3>
+                                    <p class="mb-0">Total Mensajes</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-success text-white">
+                                <div class="card-body text-center">
+                                    <h3>{{ estadisticas.mensajes_hoy or 0 }}</h3>
+                                    <p class="mb-0">Mensajes Hoy</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-info text-white">
+                                <div class="card-body text-center">
+                                    <h3>{{ estadisticas.usuarios_activos or 0 }}</h3>
+                                    <p class="mb-0">Usuarios Activos</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lista de mensajes -->
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th>Mensaje</th>
+                                    <th>Fecha</th>
+                                    <th>Rol</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for mensaje in mensajes %}
+                                <tr id="mensaje-{{ mensaje.id_mensaje }}">
+                                    <td>
+                                        <strong>{{ mensaje.nombre }} {{ mensaje.apellido }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ mensaje.email }}</small>
+                                        {% if mensaje.rol == 'administrador' %}
+                                        <br>
+                                        <span class="badge bg-warning text-dark">Admin</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ mensaje.mensaje }}</td>
+                                    <td>
+                                        <small>{{ mensaje.fecha_envio.strftime('%d/%m/%Y %H:%M') }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ 'warning' if mensaje.rol == 'administrador' else 'secondary' }}">
+                                            {{ mensaje.rol }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-danger btn-sm" 
+                                                data-mensaje-id="{{ mensaje.id_mensaje }}"
+                                                onclick="eliminarMensaje(this.getAttribute('data-mensaje-id'))"
+                                                title="Eliminar mensaje">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-4">
+                                        <i class="fas fa-comments fa-2x mb-2"></i>
+                                        <p>No hay mensajes en el chat</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function eliminarMensaje(idMensaje) {
+    if (!confirm('¿Estás seguro de que quieres eliminar este mensaje?')) {
+        return;
+    }
+    
+    fetch(`/admin/chat/eliminar/${idMensaje}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Eliminar la fila de la tabla sin recargar la página
+            const fila = document.getElementById(`mensaje-${idMensaje}`);
+            if (fila) {
+                fila.remove();
+            }
+            // Mostrar mensaje de éxito
+            mostrarAlerta('Mensaje eliminado correctamente', 'success');
+        } else {
+            mostrarAlerta('Error: ' + data.error, 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarAlerta('Error al eliminar mensaje', 'danger');
+    });
+}
+
+function limpiarChat() {
+    if (!confirm('¿Estás seguro de que quieres limpiar todo el chat? Esta acción no se puede deshacer.')) {
+        return;
+    }
+    
+    fetch('/admin/chat/limpiar', {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Recargar la página para mostrar la tabla vacía
+            location.reload();
+        } else {
+            mostrarAlerta('Error: ' + data.error, 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarAlerta('Error al limpiar chat', 'danger');
+    });
+}
+
+// Función auxiliar para mostrar alertas
+function mostrarAlerta(mensaje, tipo) {
+    // Crear elemento de alerta
+    const alerta = document.createElement('div');
+    alerta.className = `alert alert-${tipo} alert-dismissible fade show`;
+    alerta.innerHTML = `
+        ${mensaje}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    // Insertar al inicio del card-body
+    const cardBody = document.querySelector('.card-body');
+    cardBody.insertBefore(alerta, cardBody.firstChild);
+    
+    // Auto-eliminar después de 5 segundos
+    setTimeout(() => {
+        if (alerta.parentNode) {
+            alerta.remove();
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}

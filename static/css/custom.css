@@ -1,0 +1,119 @@
+/* static/css/custom.css - Añade estas reglas */
+
+/* Campana de notificaciones */
+.notification-bell {
+    position: relative;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.notification-bell:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.notification-bell.vibrate {
+    animation: vibrate 0.5s linear;
+}
+
+@keyframes vibrate {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(15deg); }
+    50% { transform: rotate(-15deg); }
+    75% { transform: rotate(10deg); }
+}
+
+.notification-count {
+    position: absolute;
+    top: 0;
+    right: 0;
+    font-size: 0.7rem;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: none;
+}
+
+/* Dropdown de notificaciones */
+.notification-dropdown {
+    width: 350px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.notification-item {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.notification-item:hover {
+    background-color: #f8f9fa;
+}
+
+.notification-item.unread {
+    background-color: #f0f7ff;
+    border-left: 3px solid #007bff;
+}
+
+.notification-item.read {
+    opacity: 0.8;
+}
+
+.notification-icon {
+    font-size: 1.2rem;
+}
+
+.notification-item h6 {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.notification-item p {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.notification-footer {
+    padding: 0.75rem 1rem;
+    border-top: 1px solid #eee;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .notification-dropdown {
+        width: 300px;
+        right: -100px !important;
+    }
+}
+
+/* Mejoras para notificaciones clickeables */
+.notification-item.unread {
+    background-color: #f0f7ff;
+    border-left: 3px solid #007bff;
+    cursor: pointer;
+}
+
+.notification-item.unread:hover {
+    background-color: #e3f2fd;
+    transform: translateX(2px);
+    transition: all 0.2s ease;
+}
+
+/* Indicador visual de que es clickeable */
+.notification-item.unread::after {
+    content: '→';
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    color: #007bff;
+}
+
+.notification-item.unread:hover::after {
+    opacity: 1;
+}

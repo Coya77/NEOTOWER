@@ -1,0 +1,59 @@
+<!-- templates/administrador/nuevo_anuncio.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="bi bi-plus-circle me-2"></i>Nuevo Anuncio</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="titulo" class="form-label">Título *</label>
+                        <input type="text" class="form-control" id="titulo" name="titulo" required maxlength="200">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="contenido" class="form-label">Contenido *</label>
+                        <textarea class="form-control" id="contenido" name="contenido" rows="6" required></textarea>
+                        <div class="form-text">Puedes usar saltos de línea para formatear el texto.</div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="tipo" class="form-label">Tipo *</label>
+                            <select class="form-select" id="tipo" name="tipo" required>
+                                <option value="general">General</option>
+                                <option value="importante">Importante</option>
+                                <option value="mantenimiento">Mantenimiento</option>
+                                <option value="evento">Evento</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="fecha_expiracion" class="form-label">Fecha de Expiración</label>
+                            <input type="date" class="form-control" id="fecha_expiracion" name="fecha_expiracion">
+                            <div class="form-text">Dejar vacío si no expira.</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="estado" class="form-label">Estado</label>
+                        <select class="form-select" id="estado" name="estado">
+                            <option value="activo" selected>Activo</option>
+                            <option value="inactivo">Inactivo</option>
+                        </select>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('anuncios.gestion_anuncios') }}" class="btn btn-secondary me-md-2">Cancelar</a>
+                        <button type="submit" class="btn btn-primary">Publicar Anuncio</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Perfil Residente{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2><i class="bi bi-person-circle"></i> Perfil de Residente</h2>
+  <hr>
+  <p><strong>Nombre:</strong> {{ residente.nombre }} {{ residente.apellido }}</p>
+  <p><strong>Email:</strong> {{ residente.email }}</p>
+  <p><strong>Teléfono:</strong> {{ residente.telefono or 'N/A' }}</p>
+  <p><strong>Fecha Registro:</strong> {{ residente.fecha_registro }}</p>
+
+  <h5>Departamentos</h5>
+  {% if departamentos %}
+    <ul>
+      {% for d in departamentos %}
+        <li>Piso {{ d.piso }} - Depto {{ d.numero }} ({{ d.estado }})</li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="text-muted">Sin departamentos asignados</p>
+  {% endif %}
+
+  <a href="{{ url_for('gestion_residentes') }}" class="btn btn-secondary mt-3">
+    <i class="bi bi-arrow-left"></i> Volver
+  </a>
+</div>
+{% endblock %}

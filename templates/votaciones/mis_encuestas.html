@@ -1,0 +1,97 @@
+<!-- templates/votaciones/mis_encuestas.html (fix layout form: radios compactos, centrado) -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-graph-up"></i> Mis Encuestas</h2>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Volver al Dashboard
+        </a>
+    </div>
+
+    <!-- Flashes -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="mb-3">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    {% if encuestas and encuestas|length > 0 %}
+        <!-- Loop de Encuestas -->
+        {% for encuesta in encuestas %}
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">{{ encuesta.titulo }}</h5>
+                <small class="text-light">{{ encuesta.descripcion[:100] }}... {% if encuesta.descripcion|length > 100 %}<a href="#" class="text-light text-decoration-none">(ver más)</a>{% endif %}</small>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <p><strong>Descripción:</strong> {{ encuesta.descripcion }}</p>
+                        <p class="text-muted">
+                            <i class="bi bi-calendar"></i> Inicio: {{ encuesta.fecha_inicio.strftime('%d/%m/%Y') if encuesta.fecha_inicio else 'N/A' }} | 
+                            Fin: {{ encuesta.fecha_fin.strftime('%d/%m/%Y') if encuesta.fecha_fin else 'N/A' }}
+                        </p>
+                        <span class="badge {{ 'bg-success' if encuesta.activa else 'bg-secondary' }}">
+                            {{ 'Activa' if encuesta.activa else 'Finalizada' }}
+                        </span>
+                        {% if encuesta.ha_votado %}
+                            <span class="badge bg-info ms-2">Ya participaste</span>
+                        {% else %}
+                            <span class="badge bg-warning ms-2">Pendiente de voto</span>
+                        {% endif %}
+                    </div>
+                    <div class="col-12 col-md-4 text-center">  <!-- FIX: col-12 móvil (full-width), col-md-4 desktop; text-center para alinear -->
+                        {% if encuesta.ha_votado %}
+                            <!-- Si ya votó: Resumen simple -->
+                            <p class="text-muted">Participación: {{ encuesta.total_opciones or 0 }} opciones.</p>
+                            <button class="btn btn-outline-secondary btn-sm d-block w-100" disabled>Votado</button>  <!-- FIX: w-100 móvil, centrado -->
+                        {% elif encuesta.activa %}
+                            <!-- FIX: Form centrado, radios compactos (inline desktop, vertical móvil) -->
+                            <form method="POST" action="{{ url_for('votaciones.votar', id_encuesta=encuesta.id_encuesta) }}" class="text-center">
+                                <h6 class="mb-3">Elige tu opción:</h6>
+                                {% if encuesta.opciones and encuesta.opciones|length > 0 %}
+                                    <div class="d-flex flex-column align-items-start mb-3">  <!-- FIX: Flex para alinear radios izquierda, centrado container -->
+                                        {% for opcion in encuesta.opciones %}
+                                        <div class="form-check form-check-inline me-3 mb-1">  <!-- FIX: inline desktop (menos separados), mb-1 reduce espacio vertical; me-3 horizontal -->
+                                            <input class="form-check-input" type="radio" name="opcion" id="opcion{{ encuesta.id_encuesta }}_{{ opcion.id_opcion }}" value="{{ opcion.id_opcion }}" required>
+                                            <label class="form-check-label" for="opcion{{ encuesta.id_encuesta }}_{{ opcion.id_opcion }}">
+                                                {{ opcion.texto }}
+                                            </label>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <p class="text-warning mb-3">No hay opciones disponibles para esta encuesta (contacta al admin).</p>
+                                {% endif %}
+                                <button type="submit" class="btn btn-success d-block w-100">  <!-- FIX: d-block w-100 (full-width centrado, especialmente móvil) -->
+                                    <i class="bi bi-check-lg"></i> Votar
+                                </button>
+                            </form>
+                        {% else %}
+                            <button class="btn btn-outline-secondary btn-sm d-block w-100" disabled>Finalizada</button>  <!-- FIX: w-100 centrado -->
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        <p class="text-muted">Mostrando {{ encuestas|length }} encuestas activas.</p>
+    {% else %}
+        <!-- Si no hay encuestas -->
+        <div class="alert alert-info text-center">
+            <h5><i class="bi bi-inbox"></i> No Hay Encuestas Activas</h5>
+            <p>No hay votaciones disponibles en este momento. Revisa más tarde o contacta al administrador.</p>
+            <span class="badge bg-secondary">Pendiente de creación</span>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

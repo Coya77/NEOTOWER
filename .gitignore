@@ -1,0 +1,25 @@
+venv/
+ENV/
+
+# Archivos compilados de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Archivos sensibles
+.env
+*.key
+
+# Archivos de logs o temporales
+*.log
+*.bak
+*.tmp
+
+# Configuraciones de VS Code
+.vscode/
+.idea/

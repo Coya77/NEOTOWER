@@ -1,0 +1,62 @@
+<!-- templates/usuario/reportar_incidencia.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <!-- Encabezado -->
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h2><i class="bi bi-clipboard-check me-2"></i> Reportar Incidente</h2>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+        </div>
+        <p class="text-muted">
+            Completa el siguiente formulario para reportar un incidente o problema detectado.
+        </p>
+    </div>
+
+    <!-- Formulario -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form action="{{ url_for('guardar_incidencia') }}" method="POST" enctype="multipart/form-data">
+                
+                <!-- Descripción -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Descripción del incidente</label>
+                    <textarea name="descripcion" class="form-control" rows="4"
+                              placeholder="Describe brevemente el problema o incidente..." required></textarea>
+                </div>
+
+                <!-- Gravedad -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Nivel de gravedad</label>
+                    <select name="gravedad" class="form-select" required>
+                        <option value="">Selecciona gravedad</option>
+                        <option value="Baja">Baja</option>
+                        <option value="Media" selected>Media</option>
+                        <option value="Alta">Alta</option>
+                        <option value="Crítica">Crítica</option>
+                    </select>
+                </div>
+
+                <!-- Evidencia -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Evidencia (imagen o archivo opcional)</label>
+                    <input type="file" name="evidencia" class="form-control" accept="image/*">
+                    <small class="text-muted">
+                        Puedes adjuntar una imagen o archivo relacionado al incidente.
+                    </small>
+                </div>
+
+                <!-- Botón de envío -->
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-send"></i> Enviar reporte
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

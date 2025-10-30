@@ -1,0 +1,91 @@
+<!-- templates/administrador/editar_encuesta.html (similar a nueva, con datos precargados) -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2><i class="bi bi-pencil"></i> Editar Encuesta: {{ encuesta.titulo if encuesta else 'N/A' }}</h2>
+    <a href="{{ url_for('votaciones.admin_gestion_encuestas') }}" class="btn btn-secondary mb-3">Volver</a>
+
+    <!-- Flashes -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    {% if encuesta %}
+        <div class="card shadow">
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="titulo" class="form-label">Título *</label>
+                        <input type="text" class="form-control" id="titulo" name="titulo" value="{{ encuesta.titulo }}" required maxlength="255">
+                    </div>
+                    <div class="mb-3">
+                        <label for="descripcion" class="form-label">Descripción</label>
+                        <textarea class="form-control" id="descripcion" name="descripcion" rows="3">{{ encuesta.descripcion or '' }}</textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="fecha_inicio" class="form-label">Fecha Inicio *</label>
+                            <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio" value="{{ encuesta.fecha_inicio.strftime('%Y-%m-%d') if encuesta.fecha_inicio else '' }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="fecha_fin" class="form-label">Fecha Fin *</label>
+                            <input type="date" class="form-control" id="fecha_fin" name="fecha_fin" value="{{ encuesta.fecha_fin.strftime('%Y-%m-%d') if encuesta.fecha_fin else '' }}" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Opciones de Voto * (una por línea)</label>
+                        <div id="opciones-container">
+                            {% for opcion in opciones %}
+                            <div class="input-group mb-2">
+                                <span class="input-group-text">{{ loop.index }}.</span>
+                                <input type="text" class="form-control" name="opciones" value="{{ opcion.texto }}" required>
+                                <button type="button" class="btn btn-outline-secondary" onclick="removerOpcion(this)">-</button>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <button type="button" class="btn btn-outline-primary mt-2" onclick="agregarOpcion()">+ Agregar Opción</button>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Actualizar Encuesta</button>
+                    <a href="{{ url_for('votaciones.admin_gestion_encuestas') }}" class="btn btn-secondary">Cancelar</a>
+                </form>
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-warning">
+            <h5>Encuesta No Encontrada</h5>
+            <p>La encuesta no existe. Regresa a gestión.</p>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+    let opcionCount = {{ opciones | length or 0 }};
+    function agregarOpcion() {
+        opcionCount++;
+        const container = document.getElementById('opciones-container');
+        const newInput = `
+            <div class="input-group mb-2">
+                <span class="input-group-text">${opcionCount}.</span>
+                <input type="text" class="form-control" name="opciones" placeholder="Nueva opción" required>
+                <button type="button" class="btn btn-outline-secondary" onclick="removerOpcion(this)">-</button>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', newInput);
+    }
+    function removerOpcion(button) {
+        if (document.querySelectorAll('[name="opciones"]').length > 2) {
+            button.parentElement.remove();
+        } else {
+            alert('Debe haber al menos 2 opciones.');
+        }
+    }
+</script>
+{% endblock %}

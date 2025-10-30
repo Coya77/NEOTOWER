@@ -1,0 +1,264 @@
+
+
+<!-- templates/base.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}NEOTOWER - Sistema de Edificio Inteligente{% endblock %}</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" 
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+          crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- Estilos -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+</head>
+
+<body>
+    <!-- 🔹 NAVBAR -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+        <div class="container">
+            <!-- Logo -->
+            <a class="navbar-brand fw-bold" href="{{ url_for('dashboard') }}">
+                <i class="bi bi-building"></i> NEOTOWER
+            </a>
+
+            <!-- Botón responsive -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Menú -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+
+                    {% if session.user_id %}
+                        <!-- 👋 Saludo -->
+                        <li class="nav-item">
+                            <span class="navbar-text me-3 d-none d-md-inline">
+                                👋 Hola, {{ session.user_nombre }}
+                                <span class="badge bg-light text-dark ms-1">{{ session.user_rol|capitalize }}</span>
+                            </span>
+                        </li>
+
+                        <!-- 🔔 Notificaciones -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link notification-bell" href="#" id="notificationBell" role="button">
+                                <i class="bi bi-bell fs-5"></i>
+                                <span class="notification-count badge rounded-pill" id="notificationCount"></span>
+                            </a>
+                            <div class="dropdown-menu notification-dropdown dropdown-menu-end" 
+                                 id="notificationDropdown" aria-labelledby="notificationBell">
+                                <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+                                    <h6 class="mb-0">Notificaciones</h6>
+                                    <small class="text-muted" id="notificationStatus"></small>
+                                </div>
+                                <div class="notification-list"></div>
+                            </div>
+                        </li>
+
+                        {% if session.user_rol == 'administrador' %}
+                        <!-- 🧰 PANEL ADMIN -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button"
+                               data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-speedometer2"></i> Panel Admin
+                            </a>
+                            <ul class="dropdown-menu">
+                                <!-- Dashboard -->
+                                <li><a class="dropdown-item" href="{{ url_for('admin_dashboard') }}">
+                                    <i class="bi bi-house-door"></i> Dashboard
+                                </a></li>
+
+                                <li><hr class="dropdown-divider"></li>
+                                <li><h6 class="dropdown-header text-primary mt-2">Mantenimiento</h6></li>
+                                <li><a class="dropdown-item" href="{{ url_for('gestion_incidentes') }}">
+                                    <i class="fa fa-ticket"></i> Gestión de Incidentes
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('admin_historial_tickets') }}">
+                                    <i class="fa fa-history"></i> Historial de Tickets
+                                </a></li>
+
+                                <li><hr class="dropdown-divider"></li>
+                                <li><h6 class="dropdown-header text-primary mt-2">Gestión de Usuarios</h6></li>
+                                <li><a class="dropdown-item" href="{{ url_for('gestion_residentes') }}">
+                                    <i class="bi bi-people"></i> Residentes
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('gestion_personal') }}">
+                                    <i class="bi bi-person-workspace"></i> Personal
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('asignar_departamento') }}" class="btn btn-sm btn-success">
+                                <i class="bi bi-house-add"></i> Asignar Departamento
+                                </a></li>
+                                
+                                
+                                <li><a class="dropdown-item" href="{{ url_for('chat.moderar_chat') }}">
+                                    <i class="bi bi-chat-dots"></i> Moderar Chat
+                                </a></li>
+
+                                <li><a class="dropdown-item" href="{{ url_for('anuncios.gestion_anuncios') }}">
+                                    <i class="bi bi-megaphone"></i> Gestión de Anuncios
+                                </a></li>
+
+                                <li><a class="dropdown-item" href="{{ url_for('buzon.gestion_quejas') }}">
+                                    <i class="bi bi-inbox"></i> Gestión de Quejas
+                                </a></li>
+
+                                <li><a class="dropdown-item" href="{{ url_for('votaciones.admin_gestion_encuestas') }}">
+                                    <i class="bi bi-bar-chart"></i> Gestión de Encuestas
+                                </a></li>
+
+                                <li><a class="dropdown-item" href="{{ url_for('correos.enviar_masivo') }}">
+                                    <i class="bi bi-envelope-paper"></i> Envío Masivo
+                                </a></li>
+
+                                <li><hr class="dropdown-divider"></li>
+                                <li><h6 class="dropdown-header text-primary mt-2">Servicios</h6></li>
+                                <li><a class="dropdown-item" href="{{ url_for('gestion_reservas') }}">
+                                    <i class="bi bi-calendar2-check"></i> Gestión de Reservas
+                                </a></li>
+
+                                <li><hr class="dropdown-divider"></li>
+                                <li><h6 class="dropdown-header text-primary mt-2">Finanzas y Reportes</h6></li>
+                                <li><a class="dropdown-item" href="{{ url_for('gestion_pagos') }}">
+                                    <i class="bi bi-wallet2"></i> Pagos
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('gestion_consumos') }}">
+                                    <i class="bi bi-lightning"></i> Consumos
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('reportes_auditoria') }}">
+                                    <i class="bi bi-clipboard-data"></i> Reportes Auditoría
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('reportes_financieros') }}">
+                                    <i class="bi bi-cash-stack"></i> Reportes Financieros
+                                </a></li>
+
+                                
+
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('configuraciones') }}">
+                                    <i class="bi bi-gear"></i> Configuraciones
+                                </a></li>
+                            </ul>
+                        </li>
+                        {% endif %}
+
+                        <!-- 👤 MENÚ USUARIO / RESIDENTE -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                               data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-person-circle"></i> Mi Cuenta
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{{ url_for('dashboard') }}">
+                                    <i class="bi bi-house"></i> Dashboard
+                                </a></li>
+
+                                <li><a class="dropdown-item" href="{{ url_for('usuario_perfil') }}">
+                                    <i class="bi bi-person-badge"></i> Perfil
+                                </a></li>
+
+                                <li><hr class="dropdown-divider"></li>
+                                <li><h6 class="dropdown-header text-primary mt-2">Mantenimiento</h6></li>
+                                <li><a class="dropdown-item" href="{{ url_for('ver_mis_incidentes') }}">
+                                    <i class="fa fa-list-alt"></i> Mis Tickets
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('reportar_incidencia') }}">
+                                    <i class="fa fa-exclamation-triangle"></i> Reportar Incidencia
+                                </a></li>
+
+                                <li><hr class="dropdown-divider"></li>
+                                <li><h6 class="dropdown-header text-primary mt-2">Servicios</h6></li>
+                                <li><a class="dropdown-item" href="{{ url_for('reservas') }}">
+                                    <i class="bi bi-calendar-event"></i> Reservas
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('mis_pagos') }}">
+                                    <i class="bi bi-cash-stack"></i> Mis Pagos
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('consumo') }}">
+                                    <i class="bi bi-lightning-charge"></i> Consumo
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('historico_consumo') }}">
+                                    <i class="bi bi-graph-up"></i> Histórico Consumo
+                                </a></li>
+
+                                
+                                <li><a class="dropdown-item" href="{{ url_for('chat.chat_comunitario') }}">
+                                    <i class="bi bi-chat"></i> Chat Comunitario
+                                </a></li>
+
+                                <li><a class="dropdown-item" href="{{ url_for('anuncios.muro_anuncios') }}">
+                                    <i class="bi bi-megaphone"></i> Muro de Anuncios
+                                </a></li>
+
+                                <li><a class="dropdown-item" href="{{ url_for('buzon.nueva_queja') }}">
+                                    <i class="bi bi-chat-dots"></i> Buzón de Quejas
+                                </a></li>
+
+                                <li><a class="dropdown-item" href="{{ url_for('buzon.mis_quejas') }}">
+                                    <i class="bi bi-list-check"></i> Mis Quejas
+                                </a></li>
+
+                                <li><a class="dropdown-item" href="{{ url_for('votaciones.mis_encuestas') }}">
+                                    <i class="bi bi-ui-checks"></i> Encuestas
+                                </a></li>
+
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger fw-bold text-center" href="{{ url_for('logout') }}">
+                                        <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <!-- 👀 VISITANTE -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auth.login') }}">
+                                <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('register') }}">
+                                <i class="bi bi-person-plus"></i> Registrarse
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 🔹 CONTENIDO PRINCIPAL -->
+    <main class="container my-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- 🔹 SCRIPTS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/notificaciones.js') }}"></script>
+</body>
+</html>
+

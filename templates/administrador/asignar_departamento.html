@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Asignar Departamento{% endblock %}
+{% block content %}
+
+<div class="container mt-4">
+  <h3 class="text-primary mb-4">
+    <i class="bi bi-house-add"></i> Asignar Departamento a Residente
+  </h3>
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-body">
+      <form method="POST" action="{{ url_for('asignar_departamento') }}">
+
+        <!-- Seleccionar residente -->
+        <div class="mb-3">
+          <label class="form-label fw-bold">Residente</label>
+          <select name="id_residente" class="form-select" required>
+            <option value="">-- Selecciona un residente --</option>
+            {% for r in residentes %}
+              <option value="{{ r.id_residente }}">{{ r.nombre }} {{ r.apellido }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Seleccionar departamento -->
+        <div class="mb-3">
+          <label class="form-label fw-bold">Departamento Disponible</label>
+          <select name="id_depto" class="form-select" required>
+            <option value="">-- Selecciona un departamento --</option>
+            {% for d in departamentos %}
+              <option value="{{ d.id_depto }}">N° {{ d.numero }} — Piso {{ d.piso }}</option>
+            {% endfor %}
+          </select>
+
+          {% if not departamentos %}
+            <small class="text-danger">⚠️ No hay departamentos disponibles.</small>
+          {% endif %}
+        </div>
+
+        <!-- Botones -->
+        <div class="d-flex justify-content-end">
+          <a href="{{ url_for('gestion_residentes') }}" class="btn btn-outline-secondary me-2">
+            <i class="bi bi-arrow-left"></i> Volver
+          </a>
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check-circle"></i> Asignar
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

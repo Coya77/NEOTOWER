@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Acceso{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Editar Acceso</h2>
+
+    <form method="POST" action="{{ url_for('editar_acceso', id_acceso=acceso.id_acceso) }}" class="needs-validation" novalidate>
+        <!-- Tipo de acceso -->
+        <div class="mb-3">
+            <label for="tipo" class="form-label">Tipo de Acceso</label>
+            <select class="form-select" id="tipo" name="tipo" required>
+                <option value="tarjeta" {% if acceso.tipo == 'tarjeta' %}selected{% endif %}>Tarjeta</option>
+                <option value="huella" {% if acceso.tipo == 'huella' %}selected{% endif %}>Huella</option>
+                <option value="qr" {% if acceso.tipo == 'qr' %}selected{% endif %}>QR</option>
+                <option value="otro" {% if acceso.tipo == 'otro' %}selected{% endif %}>Otro</option>
+            </select>
+            <div class="invalid-feedback">Debe seleccionar un tipo de acceso.</div>
+        </div>
+
+        <!-- Estado -->
+        <div class="mb-3">
+            <label for="estado" class="form-label">Estado</label>
+            <select class="form-select" id="estado" name="estado" required>
+                <option value="activo" {% if acceso.estado == 'activo' %}selected{% endif %}>Activo</option>
+                <option value="pendiente" {% if acceso.estado == 'pendiente' %}selected{% endif %}>Pendiente</option>
+                <option value="inactivo" {% if acceso.estado == 'inactivo' %}selected{% endif %}>Inactivo</option>
+            </select>
+            <div class="invalid-feedback">Debe seleccionar un estado.</div>
+        </div>
+
+        <!-- Botones -->
+        <div class="d-flex justify-content-between">
+            <a href="{{ url_for('gestion_accesos') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Cancelar
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Guardar Cambios
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+(() => {
+    'use strict'
+    const forms = document.querySelectorAll('.needs-validation')
+    Array.from(forms).forEach(form => {
+        form.addEventListener('submit', event => {
+            if (!form.checkValidity()) {
+                event.preventDefault()
+                event.stopPropagation()
+            }
+            form.classList.add('was-validated')
+        }, false)
+    })
+})()
+</script>
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Mis Incidentes Reportados{% endblock %}
+
+{% block content %}
+<div class="mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <!-- Clases de Tailwind reemplazadas por Bootstrap: h3, fw-bold, text-dark -->
+        <h1 class="h3 fw-bold text-dark">Mis Incidentes</h1>
+        <!-- URL y clases de Tailwind reemplazadas por Bootstrap (btn-primary, shadow) -->
+        <a href="{{ url_for('reportar_incidencia') }}" class="btn btn-primary shadow">
+            <i class="bi bi-plus-circle"></i> Reportar nuevo incidente
+        </a>
+
+        
+    </div>
+
+    {% if incidentes %}
+    <!-- Clases de Tailwind/mix de Bootstrap reemplazadas por card Bootstrap estándar -->
+    <div class="card shadow-lg border-0 rounded">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0">
+                    <thead class="table-light"> <!-- Fondo ligero para el encabezado -->
+                        <tr>
+                            <!-- Ajuste de clases para una cabecera de tabla Bootstrap estándar -->
+                            <th scope="col" class="px-3 py-3 text-start text-uppercase small text-secondary">ID</th>
+                            <th scope="col" class="px-3 py-3 text-start text-uppercase small text-secondary">Descripcion</th>
+                            <th scope="col" class="px-3 py-3 text-start text-uppercase small text-secondary">Tipo</th>
+                            <th scope="col" class="px-3 py-3 text-start text-uppercase small text-secondary">Gravedad</th>
+                            <th scope="col" class="px-3 py-3 text-start text-uppercase small text-secondary">Técnico Asignado</th>
+                            <th scope="col" class="px-3 py-3 text-start text-uppercase small text-secondary">Fecha Reporte</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for i in incidentes %}
+                        <tr>
+                            <td>{{ i.id_incidente }}</td>
+                            <td>{{ i.descripcion }}</td>
+                            <td>
+                                {% if i.estado == 'Abierto' %}
+                                <span class="badge bg-secondary">Abierto</span>
+                                {% elif i.estado == 'En Progreso' %}
+                                <span class="badge bg-warning text-dark">En Progreso</span>
+                                {% elif i.estado == 'Cerrado' %}
+                                <span class="badge bg-success">Cerrado</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ i.gravedad }}</td>
+                            <td>
+                                {% if i.tecnico %}
+                                👷 El técnico <strong>{{ i.tecnico }}</strong>
+                                {% if i.cargo_tecnico %}
+                                    ({{ i.cargo_tecnico }})
+                                {% endif %}
+                                viene en seguida.
+                                {% else %}
+                                ⏳ En espera de asignación de técnico.
+                                {% endif %}
+                            </td>
+                            <td>{{ i.fecha_reporte.strftime('%d/%m/%Y') if i.fecha_reporte else '-' }}</td>
+                        </tr>
+
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center" role="alert">
+        Aún no has reportado ningún incidente. ¡Puedes hacerlo ahora!
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

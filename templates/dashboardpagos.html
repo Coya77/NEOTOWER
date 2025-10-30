@@ -1,0 +1,330 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <h2 class="mb-0"><i class="bi bi-credit-card me-2"></i>Dashboard de Pagos</h2>
+   <div class="d-flex gap-2">
+    <a class="btn btn-outline-success"
+       href="{{ url_for('admin_pagos_export_excel',
+                        fecha_inicio=filtros.fecha_inicio,
+                        fecha_fin=filtros.fecha_fin,
+                        estado=filtros.estado,
+                        tipo=filtros.tipo,
+                        departamento=filtros.departamento,
+                        residente=filtros.residente) }}">
+      <i class="bi bi-file-earmark-excel"></i> Excel
+    </a>
+    <a class="btn btn-outline-danger"
+       href="{{ url_for('admin_pagos_export_pdf',
+                        fecha_inicio=filtros.fecha_inicio,
+                        fecha_fin=filtros.fecha_fin,
+                        estado=filtros.estado,
+                        tipo=filtros.tipo,
+                        departamento=filtros.departamento,
+                        residente=filtros.residente) }}">
+      <i class="bi bi-file-earmark-pdf"></i> PDF
+    </a>
+  </div>
+  <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i> Volver al panel
+  </a>
+</div>
+
+<!-- Alertas -->
+{% if alertas %}
+  {% for a in alertas %}
+    <div class="alert alert-{{ 'danger' if a.nivel=='danger' else ('warning' if a.nivel=='warning' else 'info') }} shadow-sm" role="alert">
+      <i class="bi {{ 'bi-exclamation-octagon' if a.nivel=='danger' else ('bi-exclamation-triangle' if a.nivel=='warning' else 'bi-info-circle') }} me-2"></i>
+      {{ a.mensaje }}
+    </div>
+  {% endfor %}
+{% endif %}
+
+<!-- Filtros (punto 5) -->
+<div class="card mb-4 shadow-sm">
+  <div class="card-header"><i class="bi bi-filter-circle me-2"></i>Filtros</div>
+  <div class="card-body">
+    <form class="row g-3" method="get" action="{{ url_for('dashboardpagos') }}">
+      <div class="col-md-3">
+        <label class="form-label">Fecha inicio</label>
+        <input type="date" class="form-control" name="fecha_inicio" value="{{ filtros.fecha_inicio }}">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Fecha fin</label>
+        <input type="date" class="form-control" name="fecha_fin" value="{{ filtros.fecha_fin }}">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Estado</label>
+        <select class="form-select" name="estado">
+          <option value="">Todos</option>
+          {% for e in opciones.estados %}
+            <option value="{{ e }}" {{ 'selected' if filtros.estado|lower==e|lower else '' }}>{{ e }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Departamento</label>
+        <select class="form-select" name="departamento">
+          <option value="">Todos</option>
+          {% for d in opciones.departamentos %}
+            <option value="{{ d }}" {{ 'selected' if filtros.departamento==d else '' }}>{{ d }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-12 d-flex gap-2">
+        <button class="btn btn-primary"><i class="bi bi-search"></i> Aplicar</button>
+        <a class="btn btn-outline-secondary" href="{{ url_for('dashboardpagos') }}"><i class="bi bi-x-circle"></i> Limpiar</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- KPIs (punto 1) -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <div class="text-muted small">Monto total (filtrado)</div>
+            <div class="h4 mb-0">Bs {{ '{:,.2f}'.format(resumen.monto_total) }}</div>
+          </div>
+          <i class="bi bi-cash-coin fs-3 text-success"></i>
+        </div>
+        <div class="text-muted small mt-2">Promedio: Bs {{ '{:,.2f}'.format(resumen.monto_promedio) }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <div class="text-muted small">% Morosidad</div>
+            <div class="h4 mb-0">{{ resumen.porc_mora }}%</div>
+          </div>
+          <i class="bi bi-alarm fs-3 text-danger"></i>
+        </div>
+        <div class="text-muted small mt-2">A tiempo: {{ resumen.porc_ontime }}%</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <div class="text-muted small">Mes actual</div>
+            <div class="h4 mb-0">Bs {{ '{:,.2f}'.format(resumen.monto_mes_actual) }}</div>
+          </div>
+          <i class="bi bi-calendar2-week fs-3 text-primary"></i>
+        </div>
+        <div class="small mt-2 {{ 'text-success' if resumen.growth_mes>=0 else 'text-danger' }}">
+          {{ '+' if resumen.growth_mes>=0 else '' }}{{ resumen.growth_mes }}% vs mes anterior
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <div class="text-muted small">Retraso promedio</div>
+            <div class="h4 mb-0">{{ resumen.prom_retraso_dias }} días</div>
+          </div>
+          <i class="bi bi-hourglass-split fs-3 text-warning"></i>
+        </div>
+        <div class="text-muted small mt-2">Registros: {{ resumen.total_registros }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Gráficos (punto 2) -->
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-header"><i class="bi bi-graph-up-arrow me-2"></i>Ingresos por mes</div>
+      <div class="card-body"><canvas id="lineMontos"></canvas></div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-header"><i class="bi bi-bar-chart-steps me-2"></i>Cantidad de pagos por mes</div>
+      <div class="card-body"><canvas id="barCantidad"></canvas></div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-header"><i class="bi bi-layers-half me-2"></i>Pagos por estado (apilado)</div>
+      <div class="card-body"><canvas id="stackEstados"></canvas></div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-header"><i class="bi bi-pie-chart me-2"></i>Distribución por tipo de pago</div>
+      <div class="card-body"><canvas id="donaTipos"></canvas></div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-header"><i class="bi bi-building me-2"></i>Top departamentos por monto</div>
+      <div class="card-body"><canvas id="barDeptos"></canvas></div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-header"><i class="bi bi-hurricane me-2"></i>Distribución de montos</div>
+      <div class="card-body"><canvas id="histMontos"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- Recomendaciones (punto 4) -->
+<div class="card my-4 shadow-sm">
+  <div class="card-header"><i class="bi bi-lightbulb me-2"></i>Recomendaciones</div>
+  <div class="card-body">
+    {% if recomendaciones and recomendaciones|length>0 %}
+      <ul class="mb-0">
+        {% for r in recomendaciones %}
+          <li>{{ r }}</li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <span class="text-muted">Sin recomendaciones por ahora.</span>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Tablas (drill-down del punto 5) -->
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-header"><i class="bi bi-hourglass-top me-2"></i>Próximos vencimientos (7 días)</div>
+      <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              {% if tablas.proximos_venc and tablas.proximos_venc[0].get('id_residente') is not none %}
+              <th>ID Residente</th>
+              {% endif %}
+              <th>Depto</th>
+              <th>Tipo</th>
+              <th>Monto</th>
+              <th>Estado</th>
+              <th>Vencimiento</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in tablas.proximos_venc %}
+            <tr>
+              {% if p.get('id_residente') is not none %}
+              <td>{{ p.id_residente }}</td>
+              {% endif %}
+              <td>{{ p.departamento }}</td>
+              <td>{{ p.tipo }}</td>
+              <td>Bs {{ '{:,.2f}'.format(p.monto) }}</td>
+              <td><span class="badge {{ 'bg-danger' if 'Retras' in p.estado else 'bg-secondary' }}">{{ p.estado }}</span></td>
+              <td>{{ p.vencimiento }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="text-muted text-center">Sin vencimientos próximos</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-header"><i class="bi bi-person-exclamation me-2"></i>Top morosos</div>
+      <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              {% if tablas.morosos and tablas.morosos[0].get('id_residente') is not none %}
+              <th>ID Residente</th>
+              {% endif %}
+              {% if tablas.morosos and tablas.morosos[0].get('departamento') is not none %}
+              <th>Depto</th>
+              {% endif %}
+              <th>Monto total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for m in tablas.morosos %}
+            <tr>
+              {% if m.get('id_residente') is not none %}
+              <td>{{ m.id_residente }}</td>
+              {% endif %}
+              {% if m.get('departamento') is not none %}
+              <td>{{ m.departamento }}</td>
+              {% endif %}
+              <td>Bs {{ '{:,.2f}'.format(m.monto_total if m.get('monto_total') is not none else m._monto) }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="3" class="text-muted text-center">Sin morosos en el rango</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JS: Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+  const meses     = {{ charts.meses|tojson }};
+  const montosMes = {{ charts.montos_por_mes|tojson }};
+  const cantMes   = {{ charts.cantidad_por_mes|tojson }};
+
+  // Línea: montos por mes
+  new Chart(document.getElementById('lineMontos'), {
+    type: 'line',
+    data: { labels: meses, datasets: [{ label: 'Bs', data: montosMes, tension: .3, fill: true }] },
+    options: { responsive: true, plugins: { legend: { display: true } } }
+  });
+
+  // Barras: cantidad por mes
+  new Chart(document.getElementById('barCantidad'), {
+    type: 'bar',
+    data: { labels: meses, datasets: [{ label: '# Pagos', data: cantMes }] },
+    options: { responsive: true, plugins: { legend: { display: true } } }
+  });
+
+  // Apilado por estado
+  const sMeses   = {{ charts.stacked_meses|tojson }};
+  const sEstados = {{ charts.stacked_estados|tojson }};
+  const sData    = {{ charts.stacked_data|tojson }};
+  new Chart(document.getElementById('stackEstados'), {
+    type: 'bar',
+    data: { labels: sMeses, datasets: sEstados.map(e => ({ label: e, data: sData[e], stack: 'estados' })) },
+    options: { responsive: true, plugins: { legend: { position: 'bottom' } }, scales: { x: { stacked: true }, y: { stacked: true } } }
+  });
+
+  // Dona por tipo
+  new Chart(document.getElementById('donaTipos'), {
+    type: 'doughnut',
+    data: { labels: {{ charts.tipos_labels|tojson }}, datasets: [{ data: {{ charts.tipos_values|tojson }} }] },
+    options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+  });
+
+  // Top deptos por monto
+  new Chart(document.getElementById('barDeptos'), {
+    type: 'bar',
+    data: { labels: {{ charts.top_deptos_labels|tojson }}, datasets: [{ label: 'Bs', data: {{ charts.top_deptos_values|tojson }} }] },
+    options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } } }
+  });
+
+  // Histograma de montos
+  new Chart(document.getElementById('histMontos'), {
+    type: 'bar',
+    data: { labels: {{ charts.hist_labels|tojson }}, datasets: [{ label: '# Pagos', data: {{ charts.hist_values|tojson }} }] },
+    options: { responsive: true, plugins: { legend: { display: false } } }
+  });
+</script>
+{% endblock %}
