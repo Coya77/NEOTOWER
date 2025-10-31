@@ -177,8 +177,8 @@ def enviar_correo_bienvenida(email, nombre, rol):
 s = URLSafeTimedSerializer(app.secret_key)
 
 # ================= CLAVES RECAPTCHA =================
-RECAPTCHA_SITE_KEY = '6LfWxckrAAAAACM-VENVU_Q3sIudLJ3Y_jsB8txa'
-RECAPTCHA_SECRET_KEY = '6LfWxckrAAAAAOUk7gwkAtuxeCc6yKySywpTwI4G'
+RECAPTCHA_SITE_KEY = '6LcRy_wrAAAAAEl_fkuGIIhkabNF8FicCmISkBoN'
+RECAPTCHA_SECRET_KEY = '6LcRy_wrAAAAAGZPriLu7KOzxs8jOC81-MS_mZN7'
 
 
 # --------------------------
