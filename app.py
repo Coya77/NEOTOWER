@@ -112,17 +112,25 @@ app.register_blueprint(correos_bp)
 # Configuración DB
 # --------------------------
 DB_CONFIG = {
-    'host': 'localhost',
-    'database': 'NEOTOWER',
-    'user': 'postgres',
-    'password': '12345'
+    'host': 'dpg-d420odje5dus739ud7m0-a',   # host de tu Render
+    'database': 'neotower',
+    'user': 'neotower_user',
+    'password': '6uyr2Lo3A4XEb4nwfo0JHaX9pLnQr0VW',
+    'port': '5432'
 }
 
 
 bcrypt = Bcrypt(app)
 
 def get_db_connection():
-    return psycopg2.connect(**DB_CONFIG, cursor_factory=psycopg2.extras.RealDictCursor)
+    return psycopg2.connect(
+        host=DB_CONFIG['host'],
+        database=DB_CONFIG['database'],
+        user=DB_CONFIG['user'],
+        password=DB_CONFIG['password'],
+        port=DB_CONFIG['port'],
+        cursor_factory=psycopg2.extras.RealDictCursor
+    )
 
 # ================= CONFIG MAIL =================
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
